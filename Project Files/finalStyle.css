@@ -1,0 +1,147 @@
+   html {
+      background-color: #222222;
+   }
+
+   body {
+      background-color: #fffbf0;
+      margin: 0px;
+      overflow-y: scroll !important;
+   }
+   hr {
+      border: 0;
+      height: 1px;
+      background: lightgray;
+   }
+   .bold {
+      font-weight: bold;
+   }
+   #bodyDiv {
+      padding: 0 5% 0 5%;
+   }
+   #headerDiv h1 {
+      font-size: 3em;
+   }
+   #headerBar {
+      background-color: #F5C358;
+      height: 10px;
+   }
+
+   
+
+   .navBar {
+      background-color: #333;
+   }
+   .navCSS a {
+      color: white;
+      text-decoration: none;
+      padding: 14px 16px;
+      border-right: 1px solid #bbb;
+   }
+   .navCSS a:hover {
+      background-color: #111;
+   }
+   .dropdown-menu {
+      background-color: white;
+      width: 100%;
+   }
+   .dropdown-menu a {
+      color: black;
+      width: 100%;
+   }
+   .dropdown-menu a:hover {
+      background-color: #b2b2b2;
+   }
+
+   #loginButton{
+      float: right;
+      background-color: #F1B82D; 
+   }
+   #loginButton .loginHover:hover {
+      background-color: #efb015;
+   }
+
+   #contentDiv {
+      margin: 5% 0 5% 0;
+      border-top: 5px solid #F5C358; 
+      box-shadow: 0 0 10px lightgray;
+      background-color: #FFFFFF;
+      padding: 2% 5% 2% 5%;
+   }
+   #contentDiv .center{
+      text-align: center;
+    }
+   #footerDiv {
+      background-color: #222222;
+      color: #CCCCCC;
+      padding: 1% 5% 1% 5%;
+   }
+
+   input[type=submit], input[type=button], #loadButton {
+      width: 100%;
+      background-color: #F1B82D;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+   }
+
+   input[type=submit]:hover, #loadButton:hover {
+      background-color: #efb015;
+   }
+   #logo {
+      width: 40%;
+      height: 40%;
+   }
+
+   
+.displayInline {
+   display: inline-block;
+}
+
+.tableBorder {
+   box-shadow: 0 0 5px lightgray;
+}
+.iconBorder {
+   padding: 5px;
+   margin: 2px;
+   box-shadow: 0 0 2px lightgray;
+   background-color: white;
+}
+.iconBorder:hover {
+   box-shadow: 0 0 2px black;
+}
+
+.studentSelect:link, .studentSelect:visited {
+   color: #0000EE;
+}
+.keyIcon {
+   margin: 0 20% 0 0;
+}
+
+#formSpan {
+   float: right;
+}
+.red {
+   color: red;
+}
+
+#searchSubmit {
+   width: 20%;
+}
+#searchBy {
+   width: 20%;
+}
+#searchText {
+   width: 59%;
+}
+.searchRow {
+   text-align: center;
+}
+
+
+
+
+
+
