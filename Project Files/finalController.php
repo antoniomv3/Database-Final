@@ -35,11 +35,16 @@ class finalController {
          case 'selectRecord':
             $this->nav = 'selectRecord';
             break;
-         case 'deleteStudent':
-            $this->nav = 'deleteStudent';
+         case 'deleteRecord':
+            $this->nav = 'deleteRecord';
             break;
-         
-         default:   
+         case 'submitForm':
+            $this->nav = 'submitForm';
+            break;
+         case 'editRecord':
+            $this->nav = 'editRecord';
+            break;
+         default:  
             break;
       }
       $this->runPage();

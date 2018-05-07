@@ -91,3 +91,77 @@ $sql = "SELECT * FROM Student";
 //      $hashed = crypt("pass");
 //      pg_execute($dbconn, "insert_login", array($hashed));
 ?>
+
+
+//      echo "<h3>Research</h3>";
+//      echo "<br>lab: ";
+//      print_r($researchLabArray);
+//      echo "<br>start: ";
+//      print_r($researchStartArray);
+//      echo "<br>End: ";
+//      print_r($researchEndArray);
+//      echo "<br>Lastname: ";
+//      print_r($researchLastNameArray);
+//      echo "<br>Firstname: ";
+//      print_r($researchFirstNameArray);
+//      echo "<br>Pos: ";
+//      print_r($researchPosArray);
+//      echo "<br>volunteer: ";
+//      print_r($researchVolunteerArray);
+//      echo "<br>hours: ";
+//      print_r($researchHoursArray);
+//      
+//      echo "<h3>Work</h3>";
+//      echo "<br>employer: ";
+//      print_r($workEmployerArray);
+//      echo "<br>pos: ";
+//      print_r($workPositionArray);
+//      echo "<br>start: ";
+//      print_r($workStartArray);
+//      echo "<br>end: ";
+//      print_r($workEndArray);
+//      echo "<br>hours: ";
+//      print_r($workHoursArray);
+//      echo "<br>healthcare: ";
+//      print_r($workHealthcareArray);
+//     
+//      echo "<h3>Shadow</h3>";
+//      echo "<br>lastname: ";
+//      print_r($shadowLastNameArray);
+//      echo "<br>firstname: ";
+//      print_r($shadowFirstNameArray);
+//      echo "<br>specialty: ";
+//      print_r($shadowSpecialtyArray);
+//      echo "<br>hours: ";
+//      print_r($shadowHoursArray);
+//      
+//      echo "<h3>Volunteer</h3>";
+//      echo "<br>org: ";
+//      print_r($volunteerOrgArray);
+//      echo "<br>start: ";
+//      print_r($volunteerStartArray);
+//      echo "<br>end: ";
+//      print_r($volunteerEndArray);
+//      echo "<br>hours: ";
+//      print_r($volunteerHoursArray);
+//      echo "<br>avg: ";
+//      print_r($volunteerAvgArray);
+//      echo "<br>healthcare: ";
+//      print_r($volunteerHealthcareArray);
+//      
+//       echo "<h3>Abroad</h3>";
+//      echo "<br>school: ";
+//      print_r($abroadSchoolArray);
+//      echo "<br>start: ";
+//      print_r($abroadStartArray);
+//      echo "<br>end: ";
+//      print_r($abroadEndArray);
+//      echo "<br>city: ";
+//      print_r($abroadCityArray);
+//      echo "<br>country: ";
+//      print_r($abroadCountryArray);
+//   
+//      
+//      
+//       
+//      exit;
