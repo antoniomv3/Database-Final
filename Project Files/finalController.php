@@ -38,11 +38,17 @@ class finalController {
          case 'deleteRecord':
             $this->nav = 'deleteRecord';
             break;
+         case 'deleteRecordAssociation':
+            $this->nav = 'deleteRecordAssociation';
+            break;
          case 'submitForm':
             $this->nav = 'submitForm';
             break;
          case 'editRecord':
             $this->nav = 'editRecord';
+            break;
+         case 'queries':
+            $this->nav = 'queries';
             break;
          default:  
             break;

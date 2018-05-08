@@ -91,24 +91,52 @@ class finalModel {
                $tableData = $this->prepareAll($tableSource);
                break;
                
+            case "deleteRecordAssociation": 
+               $source = 'recordContent';
+               $this->deleteRecordAssociation();
+               $_POST['ID'] = $_POST['studentID'];
+               $_POST['groupSelect'] = 'Student List';
+               list($recordData, $group, $tableData, $tableSource, $studentData) = $this->prepareRecordData('select');
+               break;
+               
             case "editRecord":
                $source = 'formContent';
+               
                list($recordData, $group, $tableData, $tableSource, $studentData) = $this->prepareRecordData('update');
                $formOptions = $this->prepareEditFormOptions();
                break;
                
             case "submitForm":
-               $this->submitForm();
+               $tableSource = $this->submitForm();
                $source = 'viewContent';
-               $tableSource = 'students';
                $tableData = $this->prepareAll($tableSource);
                break;
                
             case "newStudent":
                $source = 'formContent';
+               $studentData = ' ';
                $formOptions = $this->prepareFormOptions();
                break;
+            case "newAdvisor":
+               $source = 'formContent';
+               $group = 'MedOpp Advisor';
+               break;
+            case "newWriter":
+               $source = 'formContent';
+               $group = 'Letter Writer';
+               break;
+            case 'newMember':
+               $source = 'formContent';
+               $group = 'Committee Member';
+               break;
+            case 'queryPage':
+               $source = 'queryContent';
+               break;
+            case 'queries':
+               list($tableData, $recordData, $tableSource) = $this->runQuery();
+               $source = 'queryResult';
                
+               break;
             default:
             //If anything not listed above is present in the nav variable, it will return it to the home page anyway.
                $source = 'homeContent';
@@ -182,22 +210,49 @@ class finalModel {
       $searchText = $_POST['searchText'];
       $tableSource = '';
       
+      $sql = '';
+      $id = '';
+      
       switch($searchBy) {
          case 'StudentID':
             $tableSource = 'students';
+            $id = 'studentid';
+            $sql = "SELECT StudentID, Last_Name, First_Name FROM Student WHERE StudentID = ?";
             break;
          case 'Student_Last_Name':
             $tableSource = 'students';
-            $searchBy = 'Last_Name';
+            $id = 'studentid';
+            $searchText .= '%';
+            $sql = "SELECT StudentID, Last_Name, First_Name FROM Student WHERE Last_Name LIKE ?";
+            break;
+         case 'Advisor_Last_Name':
+            $tableSource = 'advisors';
+            $id = 'advisorid';
+            $searchText .= '%';
+            $sql = "SELECT AdvisorID, Last_Name, First_Name FROM MedOpp_Advisor WHERE Last_Name LIKE ?";
+            break;
+         case 'Letter_Writer_Last_Name':
+            $tableSource = 'writers';
+            $id = 'writerid';
+            $searchText .= '%';
+            $sql = "SELECT WriterID, Last_Name, First_Name FROM Letter_Writer WHERE Last_Name LIKE ?";
+            break;
+         case 'Committee_Member_Last_Name':
+            $tableSource = 'committee members';
+            $id = 'interviewerid';
+            $searchText .= '%';
+            $sql = "SELECT InterviewerID, Last_Name, First_Name FROM Interviewer WHERE Last_Name LIKE ?";
             break;
          default:
       }
       
       $conn = $this->initDatabaseConnection();
-      
-      $sql = "SELECT StudentID, Last_Name, First_Name FROM Student WHERE $searchBy = ?";
+   
       $query = $conn->prepare($sql);
-      $query->execute(array($searchText));
+      if(!$query->execute(array($searchText))) {
+         print_r($query->errorInfo()); 
+         echo "Hit the back arrow to repopulate the form, fix the error and resubmit";
+      }
       $count = $query->rowCount();
      
       if($count === 0) {
@@ -209,7 +264,7 @@ class finalModel {
       $tableData = '';
       
       while($row = $query->fetch(PDO::FETCH_ASSOC)) {
-          $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+          $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row[''.$id.'']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
          <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
       }
       
@@ -299,7 +354,7 @@ class finalModel {
             $sql = "SELECT * FROM MedOpp_Advisor WHERE AdvisorID = ?";
             $sql2 = "SELECT StudentID, Last_Name, First_Name FROM Student WHERE AdvisorID = ? ORDER BY Last_Name ASC";
             $group = 'MedOpp Advisor';
-            $tableSource = 'students';
+            $tableSource = 'advisorStudents';
             
             $query = $conn->prepare($sql2);
             $query->execute(array($ID));
@@ -309,7 +364,7 @@ class finalModel {
                 $tableData = '<tr><td colspan="4">There are no students in the database at this time!</td></tr>';
             } else {
                while($row = $query->fetch(PDO::FETCH_ASSOC)) {
-                  $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+                  $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td></tr>';
                }
             }
             break;
@@ -743,7 +798,7 @@ class finalModel {
                $i = 1;
                while($row = $query->fetch(PDO::FETCH_ASSOC)) {
                   if($i == 1) {
-                     $studentData['hptestData'] .= '<tr><td><input type="text" class="form-control" id="testname" name="Test_Name[]" value="'.$row['test_name'].'"></td><td><input type="text" class="form-control" id="testdate" name="Test_Date[]" value="'.$row['test_date'].'"></td><td><input type="text" class="form-control" id="testscore" name="Test_Score[]" value="'.$row['test_score'].'"></td><td class="text-right"><a href="#"><img class="iconBorder testsAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';   
+                     $studentData['hptestData'] .= '<tr><td><input type="text" class="form-control" id="testname" name="Test_Name[]" value="'.$row['test_name'].'"></td><td><input type="text" class="form-control" id="testdate" name="Test_Date[]" value="'.$row['test_date'].'"></td><td><input type="text" pattern="[0-9]+" title="Numbers only please." class="form-control" id="testscore" name="Test_Score[]" value="'.$row['test_score'].'"></td><td class="text-right"><a href="#"><img class="iconBorder testsAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';   
                   } else {
                      $studentData['hptestData'] .= '<tr id="testsRow'.$i.'"><td><input type="text" class="form-control" id="testname" name="Test_Name[]" value="'.$row['test_name'].'"></td><td><input type="text" class="form-control" id="testdate" name="Test_Date[]" value="'.$row['test_date'].'"></td><td><input type="text" class="form-control" id="testscore" name="Test_Score[]" value="'.$row['test_score'].'"></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>';   
                   }
@@ -847,15 +902,24 @@ class finalModel {
             $query->execute(array($ID));
             $count = $query->rowCount();
             
-            
+            if($formStatus == 'select') {
             if($count === 0) {
                 $studentData['interviewerData'] = '<tr><td colspan="4">There are no interviewers for this interview in the database at this time!</td></tr></tbody></table>';
             } else {
                while($row = $query->fetch(PDO::FETCH_ASSOC)) {
-                  $studentData['interviewerData'] .= '<tr><td><a class="recordSelect" href="#">' .$row['interviewerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+                  $studentData['interviewerData'] .= '<tr><td><a class="recordSelect" href="#">' .$row['interviewerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td class="text-right"><a href="#"><img class="iconBorder deleteJoinIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
                }
                $studentData['interviewerData'] .= '</tbody></table>';
-            }
+            }}
+            if($formStatus == 'update') {
+            if($count === 0) {
+                $studentData['interviewerData'] = '<tr><td colspan="4">There are no interviewers for this interview in the database at this time!</td></tr></tbody></table>';
+            } else {
+               while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+                  $studentData['interviewerData'] .= '<tr><td><a class="recordSelect" href="#">' .$row['interviewerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td class="text-right"><a href="#"><img class="iconBorder deleteJoinIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+               }
+               $studentData['interviewerData'] .= '</tbody></table>';
+            }}
             
             
             
@@ -865,10 +929,10 @@ class finalModel {
             $count = $query->rowCount();
             
             if($count === 0) {
-                $studentData['writerData'] = '<tr><td colspan="4">There are no writers for this student in the database at this time!</td></tr></tbody></table>';
+                $studentData['writerData'] = '<tr><td colspan="5">There are no writers for this student in the database at this time!</td></tr></tbody></table>';
             } else {
                while($row = $query->fetch(PDO::FETCH_ASSOC)) {
-                  $studentData['writerData'] .= '<tr><td><a class="recordSelect" href="#">' .$row['writerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td>'.$row['reception_date'].'</td><td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+                  $studentData['writerData'] .= '<tr><td><a class="recordSelect" href="#">' .$row['writerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td>'.$row['reception_date'].'</td><td class="text-right"><a href="#"><img class="iconBorder deleteJoinIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
                }
                $studentData['writerData'] .= '</tbody></table>';
             }
@@ -985,579 +1049,653 @@ class finalModel {
       return $tableSource;
    } 
    
-   private function submitForm() {
-      $status = $_POST['status'];
-      
-      
-      $studentID = trim($_POST['StudentID']);
-      $firstName = trim($_POST['First_Name']);
-      $middleName = trim($_POST['Middle_Name']);
-      $lastName = trim($_POST['Last_Name']);
-      $medOppAdvisor = trim($_POST['MedOpp_Advisor']);
-      $email = trim($_POST['Email']);
-      $phone = trim($_POST['Phone']);
-      if("" == trim($_POST['DOB'])){
-         $dateOfBirth = null;
-      } else $dateOfBirth = $_POST['DOB']; 
-      $sex = trim($_POST['Sex']);
-      $ethnicGroup = trim($_POST['Ethnic_Group']);
-      $disadvantaged = trim($_POST['Disadvantaged']);
-      $firstGeneration = trim($_POST['First_Generation']);
-      $military = trim($_POST['Military_Service']);
-      $address = trim($_POST['Local_Address']);
-      $city = trim($_POST['City']);
-      $state = trim($_POST['State']);
-      $county = trim($_POST['Military_Service']);
-      $postal = trim($_POST['Postal']);
-      $country = trim($_POST['Country']);
-      $applicationYear = trim($_POST['Application_Year']);
-      $packetReceived = trim($_POST['Packet_Received']);
-      if("" == trim($_POST['Date_Paid'])){
-         $datePaid = null;
-      } else $datePaid = $_POST['Date_Paid'];
-      $firstTerm = trim($_POST['First_Term']);
-      $applicationStatus = trim($_POST['Application_Status']);
-      if("" == trim($_POST['HS_GPA'])){
-         $hsGPA = null;
-      } else $hsGPA = $_POST['HS_GPA'];
-      if("" == trim($_POST['GPA'])){
-         $cumGPA = null;
-      } else $cumGPA = $_POST['GPA'];
-      if("" == trim($_POST['Credits'])){
-         $credits = null;
-      } else $credits = $_POST['Credits'];
-      
-      $honorsEligible = trim($_POST['Honors_Eligible']);
-      $honorsParticipating = trim($_POST['Participating']);
-      if("" == trim($_POST['Credit_Hours'])){
-         $honorsCredits = null;
-      } else $honorsCredits = $_POST['Credit_Hours'];
-      if("" == trim($_POST['Course_Count'])){
-         $honorsCourses = null;
-      } else $honorsCourses = $_POST['Course_Count'];
-         
-      
-      
-      
-      
-      
-      
-      
-      $languageArray = array();
-      foreach ($_POST['Language'] as $value) {
-         if (" " == trim($value)) {
-            array_push($languageArray, null);   
-         } else array_push($languageArray, $value);
-      }
-      
-      
-      $programArray = array();
-      foreach ($_POST['Academic_Program'] as $value) {
-         if (" " == trim($value)) {
-            array_push($programArray, null);   
-         } else array_push($programArray, $value);
-      }
-      $degreeArray = array();
-      foreach ($_POST['Degree'] as $value) {
-         if (" " == trim($value)) {
-            array_push($degreeArray, null);   
-         } else array_push($degreeArray, $value);
-      }
-      
-      
-      $testNameArray = array();
-      foreach ($_POST['Test_Name'] as $value) {
-         if (" " == trim($value)) {
-            array_push($testNameArray, null);   
-         } else array_push($testNameArray, $value);
-      }
-      $testDateArray = array();
-      foreach ($_POST['Test_Date'] as $value) {
-         if (" " == trim($value)) {
-            array_push($testDateArray, null);   
-         } else array_push($testDateArray, $value);
-      }
-      $testScoreArray = array();
-      foreach ($_POST['Test_Score'] as $value) {
-         if (" " == trim($value)) {
-            array_push($testScoreArray, null);   
-         } else array_push($testScoreArray, $value);
-      }
-      
-      
-      $schoolNameArray = array();
-      foreach ($_POST['School_Name'] as $value) {
-         if ("" == trim($value)) {
-            array_push($schoolNameArray, null);   
-         } else array_push($schoolNameArray, $value);
-      }
-      $schoolAcceptedArray = array();
-      foreach ($_POST['School_Accepted'] as $value) {
-         if ("" == trim($value)) {
-            array_push($schoolAcceptedArray, null);   
-         } else array_push($schoolAcceptedArray, $value);
-      }
-      $schoolChoiceArray = array();
-      foreach ($_POST['School_Choice'] as $value) {
-         if ("" == trim($value)) {
-            array_push($schoolChoiceArray, null);   
-         } else array_push($schoolChoiceArray, $value);
-      }
-      
-      
-      $extraOrgArray = array();
-      foreach ($_POST['Extra_Org'] as $value) {
-         if ("" == trim($value)) {
-            array_push($extraOrgArray, null);   
-         } else array_push($extraOrgArray, $value);
-      }
-      $extraStartArray = array();
-      foreach ($_POST['Extra_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($extraStartArray, null);   
-         } else array_push($extraStartArray, $value);
-      }
-      $extraEndArray = array();
-      foreach ($_POST['Extra_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($extraEndArray, null);   
-         } else array_push($extraEndArray, $value);
-      }
-      
-      
-      $groupOrgArray = array();
-      foreach ($_POST['Group_Org'] as $value) {
-         if ("" == trim($value)) {
-            array_push($groupOrgArray, null);   
-         } else array_push($groupOrgArray, $value);
-      }
-      $groupStartArray = array();
-      foreach ($_POST['Group_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($groupStartArray, null);   
-         } else array_push($groupStartArray, $value);
-      }
-      $groupEndArray = array();
-      foreach ($_POST['Group_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($groupEndArray, null);   
-         } else array_push($groupEndArray, $value);
-      }
-      
-      
-      $leaderOrgArray = array();
-      foreach ($_POST['Leader_Org'] as $value) {
-         if ("" == trim($value)) {
-            array_push($leaderOrgArray, null);   
-         } else array_push($leaderOrgArray, $value);
-      }
-      $leaderPosArray = array();
-      foreach ($_POST['Leader_Pos'] as $value) {
-         if ("" == trim($value)) {
-            array_push($leaderPosArray, null);   
-         } else array_push($leaderPosArray, $value);
-      }
-      $leaderStartArray = array();
-      foreach ($_POST['Leader_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($leaderStartArray, null);   
-         } else array_push($leaderStartArray, $value);
-      }
-      $leaderEndArray = array();
-      foreach ($_POST['Leader_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($leaderEndArray, null);   
-         } else array_push($leaderEndArray, $value);
-      }
-      
-      
-      $researchLabArray = array();
-      foreach ($_POST['Research_Lab'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchLabArray, null);   
-         } else array_push($researchLabArray, $value);
-      }
-      $researchPosArray = array();
-      foreach ($_POST['Research_Pos'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchPosArray, null);   
-         } else array_push($researchPosArray, $value);
-      }
-      $researchLastNameArray = array();
-      foreach ($_POST['Research_Last_Name'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchLastNameArray, null);   
-         } else array_push($researchLastNameArray, $value);
-      }
-      $researchFirstNameArray = array();
-      foreach ($_POST['Research_First_Name'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchFirstNameArray, null);   
-         } else array_push($researchFirstNameArray, $value);
-      }
-      $researchHoursArray = array();
-      foreach ($_POST['Research_Hours'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchHoursArray, null);   
-         } else array_push($researchHoursArray, $value);
-      }
-      $researchVolunteerArray = array();
-      foreach ($_POST['Research_Volunteer'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchVolunteerArray, null);   
-         } else array_push($researchVolunteerArray, $value);
-      }
-      $researchStartArray = array();
-      foreach ($_POST['Research_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchStartArray, null);   
-         } else array_push($researchStartArray, $value);
-      }
-      $researchEndArray = array();
-      foreach ($_POST['Research_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($researchEndArray, null);   
-         } else array_push($researchEndArray, $value);
-      }
-      
-      
-      $workEmployerArray = array();
-      foreach ($_POST['Work_Employer'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workEmployerArray, null);   
-         } else array_push($workEmployerArray, $value);
-      }
-      $workPositionArray = array();
-      foreach ($_POST['Work_Pos'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workPositionArray, null);   
-         } else array_push($workPositionArray, $value);
-      }
-      $workHoursArray = array();
-      foreach ($_POST['Work_Hours'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workHoursArray, null);   
-         } else array_push($workHoursArray, $value);
-      }
-      $workHealthcareArray = array();
-      foreach ($_POST['Work_Healthcare'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workHealthcareArray, null);   
-         } else array_push($workHealthcareArray, $value);
-      }
-      $workStartArray = array();
-      foreach ($_POST['Work_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workStartArray, null);   
-         } else array_push($workStartArray, $value);
-      }
-      $workEndArray = array();
-      foreach ($_POST['Work_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($workEndArray, null);   
-         } else array_push($workEndArray, $value);
-      }
-          
-      
-      $shadowLastNameArray = array();
-      foreach ($_POST['Shadow_Last_Name'] as $value) {
-         if ("" == trim($value)) {
-            array_push($shadowLastNameArray, null);   
-         } else array_push($shadowLastNameArray, $value);
-      }
-      $shadowFirstNameArray = array();
-      foreach ($_POST['Shadow_First_Name'] as $value) {
-         if ("" == trim($value)) {
-            array_push($shadowFirstNameArray, null);   
-         } else array_push($shadowFirstNameArray, $value);
-      }
-      $shadowSpecialtyArray = array();
-      foreach ($_POST['Shadow_Specialty'] as $value) {
-         if ("" == trim($value)) {
-            array_push($shadowSpecialtyArray, null);   
-         } else array_push($shadowSpecialtyArray, $value);
-      }
-      $shadowHoursArray = array();
-      foreach ($_POST['Shadow_Hours'] as $value) {
-         if ("" == trim($value)) {
-            array_push($shadowHoursArray, null);   
-         } else array_push($shadowHoursArray, $value);
-      }
-      
-      
-      $volunteerOrgArray = array();
-      foreach ($_POST['Volunteer_Org'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerOrgArray, null);   
-         } else array_push($volunteerOrgArray, $value);
-      }
-      $volunteerHoursArray = array();
-      foreach ($_POST['Volunteer_Hours'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerHoursArray, null);   
-         } else array_push($volunteerHoursArray, $value);
-      }
-      $volunteerAvgArray = array();
-      foreach ($_POST['Volunteer_Avg'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerAvgArray, null);   
-         } else array_push($volunteerAvgArray, $value);
-      }
-      $volunteerHealthcareArray = array();
-      foreach ($_POST['Volunteer_Healthcare'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerHealthcareArray, null);   
-         } else array_push($volunteerHealthcareArray, $value);
-      }
-      $volunteerStartArray = array();
-      foreach ($_POST['Volunteer_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerStartArray, null);   
-         } else array_push($volunteerStartArray, $value);
-      }
-      $volunteerEndArray = array();
-      foreach ($_POST['Volunteer_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($volunteerEndArray, null);   
-         } else array_push($volunteerEndArray, $value);
-      }
-      
-      
-      $abroadSchoolArray = array();
-      foreach ($_POST['Abroad_School'] as $value) {
-         if ("" == trim($value)) {
-            array_push($abroadSchoolArray, null);   
-         } else array_push($abroadSchoolArray, $value);
-      }
-      $abroadCityArray = array();
-      foreach ($_POST['Abroad_City'] as $value) {
-         if ("" == trim($value)) {
-            array_push($abroadCityArray, null);   
-         } else array_push($abroadCityArray, $value);
-      }
-      $abroadCountryArray = array();
-      foreach ($_POST['Abroad_Country'] as $value) {
-         if ("" == trim($value)) {
-            array_push($abroadCountryArray, null);   
-         } else array_push($abroadCountryArray, $value);
-      }
-      $abroadStartArray = array();
-      foreach ($_POST['Abroad_Start'] as $value) {
-         if ("" == trim($value)) {
-            array_push($abroadStartArray, null);   
-         } else array_push($abroadStartArray, $value);
-      }
-      $abroadEndArray = array();
-      foreach ($_POST['Abroad_End'] as $value) {
-         if ("" == trim($value)) {
-            array_push($abroadEndArray, null);   
-         } else array_push($abroadEndArray, $value);
-      }
-      
-      
-      $eventNameArray = array();
-      foreach ($_POST['Event_Name'] as $value) {
-          if ("" == trim($value)) {
-            array_push($eventNameArray, null);   
-         } else array_push($eventNameArray, $value);
-      }
-      $eventCompletedArray = array();
-      foreach ($_POST['Event_Completed'] as $value) {
-         if ("" == trim($value)) {
-            array_push($eventCompletedArray, null);   
-         } else array_push($eventCompletedArray, $value);
-      }
-      
-      $letterWriterArray = array();
-      foreach ($_POST['Letter_Writers'] as $value) {
-         if ("" == trim($value)) {
-            array_push($letterWriterArray, null);   
-         } else array_push($letterWriterArray, $value);
-      }
-      $letterDateArray = array();
-      foreach ($_POST['Letter_Date'] as $value) {
-         if ("" == trim($value)) {
-            array_push($letterDateArray, null);   
-         } else array_push($letterDateArray, $value);
-      }
-      
-      
-      $contactedStudent = $_POST['Contacted_Student'];
-      
-      if("" == trim($_POST['Interview_Date'])){
-         $interviewDate = null;
-      } else $interviewDate = $_POST['Interview_Date'];
-      
-      if("" == trim($_POST['Transmit_Date'])){
-         $transmitDate = null;
-      } else $transmitDate = $_POST['Transmit_Date'];
-      
-      $committeeNote = $_POST['Committee_Note'];
-      
-      $committeeMemberArray = array();
-      foreach ($_POST['Committee_Members'] as $value) {
-         if ("" == trim($value)) {
-            array_push($committeeMemberArray, null);   
-         } else array_push($committeeMemberArray, $value);
-      }
-      
-      
-      if($status == 'update') {
-         $_POST['ID'] = $studentID;
-         $this->deleteRecordData();
-      }
-      
-      
+   private function deleteRecordAssociation(){
       $conn = $this->initDatabaseConnection();
-      $sql = "INSERT INTO Student VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      if(!$query->execute(array($studentID, $firstName, $middleName, $lastName, $medOppAdvisor, $email, $phone, $dateOfBirth, $sex, $ethnicGroup, $disadvantaged, $firstGeneration, $military, $address, $city, $state, 
-         $county, $postal, $country, $applicationYear, $packetReceived, $datePaid, $firstTerm, $applicationStatus, $hsGPA, $cumGPA, $credits, $honorsEligible))) {
-         print_r($query->errorInfo());
+      
+      $groupSelect = $_POST['groupSelect'];
+      $ID = $_POST['ID'];
+      $studentID = $_POST['studentID'];
+      
+      switch($groupSelect) {
+         case 'Letter Writer List':
+            $sql = "DELETE FROM Letter_JOIN WHERE WriterID = ? AND StudentID = ?";
+            $query = $conn->prepare($sql);
+            $query->execute(array($ID, $studentID));
+            break;
+         case 'Committee Member List':
+            $sql = "DELETE FROM Interview_Join WHERE InterviewerID = ? AND StudentID = ?";
+            $query = $conn->prepare($sql);
+            $query->execute(array($ID, $studentID));
+            break;
       }
+   
+      $conn = null;
+      $query = null;
+   } 
+   
+   private function submitForm() {
+      $conn = $this->initDatabaseConnection();
+      $tableSource = '';
       
-      $sql = "INSERT INTO Language_Fluency VALUES (?, ?)";
-      $query = $conn->prepare($sql);
-      foreach ($languageArray as $language) {
-         $query->execute(array($studentID, $language));
+      $status = $_POST['status'];
+      $groupSelect = $_POST['groupSelect'];
+      
+      $firstName = trim($_POST['First_Name']);
+      $lastName = trim($_POST['Last_Name']);
+      $email = trim($_POST['Email']);
+      $ID = trim($_POST['ID']);
+      
+      
+      switch($groupSelect) {
+         case 'MedOpp Advisor List': 
+            if($status == 'update') {
+               $sql = 'UPDATE MedOpp_Advisor SET First_Name = ?, Last_Name = ?, Email = ? WHERE AdvisorID = ?';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email, $ID));
+            }
+            if($status == 'new') {
+               $sql = 'INSERT INTO MedOpp_Advisor (First_Name, Last_Name, Email) VALUES (?, ?, ?)';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email));  
+            }
+            $tableSource = 'advisors';
+            break;
+         case 'Letter Writer List': 
+            if($status == 'update') {
+               $sql = 'UPDATE Letter_Writer SET First_Name = ?, Last_Name = ?, Email = ? WHERE WriterID = ?';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email, $ID));
+            }
+            if($status == 'new') {
+               $sql = 'INSERT INTO Letter_Writer (First_Name, Last_Name, Email) VALUES (?, ?, ?)';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email)); 
+            }
+            $tableSource = 'writers';
+            break;
+         case 'Committee Member List': 
+            if($status == 'update') {
+               $sql = 'UPDATE Interviewer SET First_Name = ?, Last_Name = ?, Email = ? WHERE InterviewerID = ?';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email, $ID));
+            }
+            if($status == 'new') {
+               $sql = 'INSERT INTO Interviewer (First_Name, Last_Name, Email) VALUES (?, ?, ?)';
+               $query = $conn->prepare($sql);
+               $query->execute(array($firstName, $lastName, $email));
+            }
+            $tableSource = 'committee members';
+            break;
+         case 'Student List':
+            if($status == 'update') {
+               $_POST['ID'] = trim($_POST['StudentID']);
+               $this->deleteRecordData();
+            } 
+               $studentID = trim($_POST['StudentID']);
+               $middleName = trim($_POST['Middle_Name']);
+               $medOppAdvisor = trim($_POST['MedOpp_Advisor']);
+               $phone = trim($_POST['Phone']);
+               if("" == trim($_POST['DOB'])){
+                  $dateOfBirth = null;
+               } else $dateOfBirth = $_POST['DOB']; 
+               $sex = trim($_POST['Sex']);
+               $ethnicGroup = trim($_POST['Ethnic_Group']);
+               $disadvantaged = trim($_POST['Disadvantaged']);
+               $firstGeneration = trim($_POST['First_Generation']);
+               $military = trim($_POST['Military_Service']);
+               $address = trim($_POST['Local_Address']);
+               $city = trim($_POST['City']);
+               $state = trim($_POST['State']);
+               $county = trim($_POST['Military_Service']);
+               $postal = trim($_POST['Postal']);
+               $country = trim($_POST['Country']);
+               $applicationYear = trim($_POST['Application_Year']);
+               $packetReceived = trim($_POST['Packet_Received']);
+               if("" == trim($_POST['Date_Paid'])){
+                  $datePaid = null;
+               } else $datePaid = $_POST['Date_Paid'];
+               $firstTerm = trim($_POST['First_Term']);
+               $applicationStatus = trim($_POST['Application_Status']);
+               if("" == trim($_POST['HS_GPA'])){
+                  $hsGPA = null;
+               } else $hsGPA = $_POST['HS_GPA'];
+               if("" == trim($_POST['GPA'])){
+                  $cumGPA = null;
+               } else $cumGPA = $_POST['GPA'];
+               if("" == trim($_POST['Credits'])){
+                  $credits = null;
+               } else $credits = $_POST['Credits'];
+
+               $honorsEligible = trim($_POST['Honors_Eligible']);
+               $honorsParticipating = trim($_POST['Participating']);
+               if("" == trim($_POST['Credit_Hours'])){
+                  $honorsCredits = null;
+               } else $honorsCredits = $_POST['Credit_Hours'];
+               if("" == trim($_POST['Course_Count'])){
+                  $honorsCourses = null;
+               } else $honorsCourses = $_POST['Course_Count'];
+
+
+
+
+
+
+
+
+               $languageArray = array();
+               foreach ($_POST['Language'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($languageArray, null);   
+                  } else array_push($languageArray, $value);
+               }
+
+
+               $programArray = array();
+               foreach ($_POST['Academic_Program'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($programArray, null);   
+                  } else array_push($programArray, $value);
+               }
+               $degreeArray = array();
+               foreach ($_POST['Degree'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($degreeArray, null);   
+                  } else array_push($degreeArray, $value);
+               }
+
+
+               $testNameArray = array();
+               foreach ($_POST['Test_Name'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($testNameArray, null);   
+                  } else array_push($testNameArray, $value);
+               }
+               $testDateArray = array();
+               foreach ($_POST['Test_Date'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($testDateArray, null);   
+                  } else array_push($testDateArray, $value);
+               }
+               $testScoreArray = array();
+               foreach ($_POST['Test_Score'] as $value) {
+                  if (" " == trim($value)) {
+                     array_push($testScoreArray, null);   
+                  } else array_push($testScoreArray, $value);
+               }
+
+
+               $schoolNameArray = array();
+               foreach ($_POST['School_Name'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($schoolNameArray, null);   
+                  } else array_push($schoolNameArray, $value);
+               }
+               $schoolAcceptedArray = array();
+               foreach ($_POST['School_Accepted'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($schoolAcceptedArray, null);   
+                  } else array_push($schoolAcceptedArray, $value);
+               }
+               $schoolChoiceArray = array();
+               foreach ($_POST['School_Choice'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($schoolChoiceArray, null);   
+                  } else array_push($schoolChoiceArray, $value);
+               }
+
+
+               $extraOrgArray = array();
+               foreach ($_POST['Extra_Org'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($extraOrgArray, null);   
+                  } else array_push($extraOrgArray, $value);
+               }
+               $extraStartArray = array();
+               foreach ($_POST['Extra_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($extraStartArray, null);   
+                  } else array_push($extraStartArray, $value);
+               }
+               $extraEndArray = array();
+               foreach ($_POST['Extra_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($extraEndArray, null);   
+                  } else array_push($extraEndArray, $value);
+               }
+
+
+               $groupOrgArray = array();
+               foreach ($_POST['Group_Org'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($groupOrgArray, null);   
+                  } else array_push($groupOrgArray, $value);
+               }
+               $groupStartArray = array();
+               foreach ($_POST['Group_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($groupStartArray, null);   
+                  } else array_push($groupStartArray, $value);
+               }
+               $groupEndArray = array();
+               foreach ($_POST['Group_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($groupEndArray, null);   
+                  } else array_push($groupEndArray, $value);
+               }
+
+
+               $leaderOrgArray = array();
+               foreach ($_POST['Leader_Org'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($leaderOrgArray, null);   
+                  } else array_push($leaderOrgArray, $value);
+               }
+               $leaderPosArray = array();
+               foreach ($_POST['Leader_Pos'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($leaderPosArray, null);   
+                  } else array_push($leaderPosArray, $value);
+               }
+               $leaderStartArray = array();
+               foreach ($_POST['Leader_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($leaderStartArray, null);   
+                  } else array_push($leaderStartArray, $value);
+               }
+               $leaderEndArray = array();
+               foreach ($_POST['Leader_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($leaderEndArray, null);   
+                  } else array_push($leaderEndArray, $value);
+               }
+
+
+               $researchLabArray = array();
+               foreach ($_POST['Research_Lab'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchLabArray, null);   
+                  } else array_push($researchLabArray, $value);
+               }
+               $researchPosArray = array();
+               foreach ($_POST['Research_Pos'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchPosArray, null);   
+                  } else array_push($researchPosArray, $value);
+               }
+               $researchLastNameArray = array();
+               foreach ($_POST['Research_Last_Name'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchLastNameArray, null);   
+                  } else array_push($researchLastNameArray, $value);
+               }
+               $researchFirstNameArray = array();
+               foreach ($_POST['Research_First_Name'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchFirstNameArray, null);   
+                  } else array_push($researchFirstNameArray, $value);
+               }
+               $researchHoursArray = array();
+               foreach ($_POST['Research_Hours'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchHoursArray, null);   
+                  } else array_push($researchHoursArray, $value);
+               }
+               $researchVolunteerArray = array();
+               foreach ($_POST['Research_Volunteer'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchVolunteerArray, null);   
+                  } else array_push($researchVolunteerArray, $value);
+               }
+               $researchStartArray = array();
+               foreach ($_POST['Research_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchStartArray, null);   
+                  } else array_push($researchStartArray, $value);
+               }
+               $researchEndArray = array();
+               foreach ($_POST['Research_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($researchEndArray, null);   
+                  } else array_push($researchEndArray, $value);
+               }
+
+
+               $workEmployerArray = array();
+               foreach ($_POST['Work_Employer'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workEmployerArray, null);   
+                  } else array_push($workEmployerArray, $value);
+               }
+               $workPositionArray = array();
+               foreach ($_POST['Work_Pos'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workPositionArray, null);   
+                  } else array_push($workPositionArray, $value);
+               }
+               $workHoursArray = array();
+               foreach ($_POST['Work_Hours'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workHoursArray, null);   
+                  } else array_push($workHoursArray, $value);
+               }
+               $workHealthcareArray = array();
+               foreach ($_POST['Work_Healthcare'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workHealthcareArray, null);   
+                  } else array_push($workHealthcareArray, $value);
+               }
+               $workStartArray = array();
+               foreach ($_POST['Work_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workStartArray, null);   
+                  } else array_push($workStartArray, $value);
+               }
+               $workEndArray = array();
+               foreach ($_POST['Work_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($workEndArray, null);   
+                  } else array_push($workEndArray, $value);
+               }
+
+
+               $shadowLastNameArray = array();
+               foreach ($_POST['Shadow_Last_Name'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($shadowLastNameArray, null);   
+                  } else array_push($shadowLastNameArray, $value);
+               }
+               $shadowFirstNameArray = array();
+               foreach ($_POST['Shadow_First_Name'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($shadowFirstNameArray, null);   
+                  } else array_push($shadowFirstNameArray, $value);
+               }
+               $shadowSpecialtyArray = array();
+               foreach ($_POST['Shadow_Specialty'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($shadowSpecialtyArray, null);   
+                  } else array_push($shadowSpecialtyArray, $value);
+               }
+               $shadowHoursArray = array();
+               foreach ($_POST['Shadow_Hours'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($shadowHoursArray, null);   
+                  } else array_push($shadowHoursArray, $value);
+               }
+
+
+               $volunteerOrgArray = array();
+               foreach ($_POST['Volunteer_Org'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerOrgArray, null);   
+                  } else array_push($volunteerOrgArray, $value);
+               }
+               $volunteerHoursArray = array();
+               foreach ($_POST['Volunteer_Hours'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerHoursArray, null);   
+                  } else array_push($volunteerHoursArray, $value);
+               }
+               $volunteerAvgArray = array();
+               foreach ($_POST['Volunteer_Avg'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerAvgArray, null);   
+                  } else array_push($volunteerAvgArray, $value);
+               }
+               $volunteerHealthcareArray = array();
+               foreach ($_POST['Volunteer_Healthcare'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerHealthcareArray, null);   
+                  } else array_push($volunteerHealthcareArray, $value);
+               }
+               $volunteerStartArray = array();
+               foreach ($_POST['Volunteer_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerStartArray, null);   
+                  } else array_push($volunteerStartArray, $value);
+               }
+               $volunteerEndArray = array();
+               foreach ($_POST['Volunteer_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($volunteerEndArray, null);   
+                  } else array_push($volunteerEndArray, $value);
+               }
+
+
+               $abroadSchoolArray = array();
+               foreach ($_POST['Abroad_School'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($abroadSchoolArray, null);   
+                  } else array_push($abroadSchoolArray, $value);
+               }
+               $abroadCityArray = array();
+               foreach ($_POST['Abroad_City'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($abroadCityArray, null);   
+                  } else array_push($abroadCityArray, $value);
+               }
+               $abroadCountryArray = array();
+               foreach ($_POST['Abroad_Country'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($abroadCountryArray, null);   
+                  } else array_push($abroadCountryArray, $value);
+               }
+               $abroadStartArray = array();
+               foreach ($_POST['Abroad_Start'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($abroadStartArray, null);   
+                  } else array_push($abroadStartArray, $value);
+               }
+               $abroadEndArray = array();
+               foreach ($_POST['Abroad_End'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($abroadEndArray, null);   
+                  } else array_push($abroadEndArray, $value);
+               }
+
+
+               $eventNameArray = array();
+               foreach ($_POST['Event_Name'] as $value) {
+                   if ("" == trim($value)) {
+                     array_push($eventNameArray, null);   
+                  } else array_push($eventNameArray, $value);
+               }
+               $eventCompletedArray = array();
+               foreach ($_POST['Event_Completed'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($eventCompletedArray, null);   
+                  } else array_push($eventCompletedArray, $value);
+               }
+
+               $letterWriterArray = array();
+               foreach ($_POST['Letter_Writers'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($letterWriterArray, null);   
+                  } else array_push($letterWriterArray, $value);
+               }
+               $letterDateArray = array();
+               foreach ($_POST['Letter_Date'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($letterDateArray, null);   
+                  } else array_push($letterDateArray, $value);
+               }
+
+
+               $contactedStudent = $_POST['Contacted_Student'];
+
+               if("" == trim($_POST['Interview_Date'])){
+                  $interviewDate = null;
+               } else $interviewDate = $_POST['Interview_Date'];
+
+               if("" == trim($_POST['Transmit_Date'])){
+                  $transmitDate = null;
+               } else $transmitDate = $_POST['Transmit_Date'];
+
+               $committeeNote = $_POST['Committee_Note'];
+
+               $committeeMemberArray = array();
+               foreach ($_POST['Committee_Members'] as $value) {
+                  if ("" == trim($value)) {
+                     array_push($committeeMemberArray, null);   
+                  } else array_push($committeeMemberArray, $value);
+               }
+
+
+
+
+
+               $sql = "INSERT INTO Student VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               if(!$query->execute(array($studentID, $firstName, $middleName, $lastName, $medOppAdvisor, $email, $phone, $dateOfBirth, $sex, $ethnicGroup, $disadvantaged, $firstGeneration, $military, $address, $city, $state, 
+                  $county, $postal, $country, $applicationYear, $packetReceived, $datePaid, $firstTerm, $applicationStatus, $hsGPA, $cumGPA, $credits, $honorsEligible))) {
+                  print_r($query->errorInfo());
+               }
+
+               $sql = "INSERT INTO Language_Fluency VALUES (?, ?)";
+               $query = $conn->prepare($sql);
+               foreach ($languageArray as $language) {
+                  $query->execute(array($studentID, $language));
+               }
+
+               $sql = "INSERT INTO Honors_Info VALUES (?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $query->execute(array($studentID, $honorsParticipating, $honorsCredits, $honorsCourses));
+
+               $sql = "INSERT INTO Academic_Plan VALUES (?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($degreeArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $degreeArray[$x], $programArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Health_Profession_Test VALUES (?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($testNameArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $testNameArray[$x], $testDateArray[$x], $testScoreArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Health_Profession_School VALUES (?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($schoolNameArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $schoolNameArray[$x], $schoolAcceptedArray[$x], $schoolChoiceArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Extra_Curricular VALUES (?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($extraOrgArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $extraOrgArray[$x], $extraStartArray[$x], $extraEndArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Student_Groups VALUES (?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($groupOrgArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $groupOrgArray[$x], $groupStartArray[$x], $groupEndArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Leadership_Position VALUES (?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($leaderOrgArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $leaderOrgArray[$x], $leaderPosArray[$x], $leaderStartArray[$x], $leaderEndArray[$x]));
+                  $x++;
+               }
+
+
+
+               $sql = "INSERT INTO Research VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($researchLabArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $researchLabArray[$x], $researchStartArray[$x], $researchEndArray[$x], $researchLastNameArray[$x], $researchFirstNameArray[$x], $researchPosArray[$x], $researchVolunteerArray[$x], $researchHoursArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Work_Experience VALUES (?, ?, ?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($workEmployerArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $workEmployerArray[$x], $workPositionArray[$x], $workStartArray[$x], $workEndArray[$x], $workHoursArray[$x], $workHealthcareArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Shadow_Experience VALUES (?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($shadowLastNameArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $shadowLastNameArray[$x], $shadowFirstNameArray[$x], $shadowSpecialtyArray[$x], $shadowHoursArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Volunteer_Experience VALUES (?, ?, ?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($volunteerOrgArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $volunteerOrgArray[$x], $volunteerStartArray[$x], $volunteerEndArray[$x], $volunteerHoursArray[$x], $volunteerAvgArray[$x], $volunteerHealthcareArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Study_Abroad VALUES (?, ?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($abroadSchoolArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $abroadSchoolArray[$x], $abroadStartArray[$x], $abroadEndArray[$x], $abroadCityArray[$x], $abroadCountryArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Event VALUES (?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($eventNameArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $eventNameArray[$x], $eventCompletedArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Letter_Join VALUES (?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($letterWriterArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($letterWriterArray[$x], $studentID, $letterDateArray[$x]));
+                  $x++;
+               }
+
+               $sql = "INSERT INTO Interview VALUES (?, ?, ?, ?, ?)";
+               $query = $conn->prepare($sql);
+               $query->execute(array($studentID, $contactedStudent, $interviewDate, $transmitDate, $committeeNote));  
+
+               $sql = "INSERT INTO Interview_Join VALUES (?, ?)";
+               $query = $conn->prepare($sql);
+               $count = count($committeeMemberArray);
+               $x = 0;
+               while($x < $count) {
+                  $query->execute(array($studentID, $committeeMemberArray[$x]));
+                  $x++;
+               }   
+            $tableSource = 'students';
+         }
+         return $tableSource;
       }
-      
-      $sql = "INSERT INTO Honors_Info VALUES (?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $query->execute(array($studentID, $honorsParticipating, $honorsCredits, $honorsCourses));
-      
-      $sql = "INSERT INTO Academic_Plan VALUES (?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($degreeArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $degreeArray[$x], $programArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Health_Profession_Test VALUES (?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($testNameArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $testNameArray[$x], $testDateArray[$x], $testScoreArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Health_Profession_School VALUES (?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($schoolNameArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $schoolNameArray[$x], $schoolAcceptedArray[$x], $schoolChoiceArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Extra_Curricular VALUES (?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($extraOrgArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $extraOrgArray[$x], $extraStartArray[$x], $extraEndArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Student_Groups VALUES (?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($groupOrgArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $groupOrgArray[$x], $groupStartArray[$x], $groupEndArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Leadership_Position VALUES (?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($leaderOrgArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $leaderOrgArray[$x], $leaderPosArray[$x], $leaderStartArray[$x], $leaderEndArray[$x]));
-         $x++;
-      }
-      
-      
-      
-      $sql = "INSERT INTO Research VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($researchLabArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $researchLabArray[$x], $researchStartArray[$x], $researchEndArray[$x], $researchLastNameArray[$x], $researchFirstNameArray[$x], $researchPosArray[$x], $researchVolunteerArray[$x], $researchHoursArray[$x]));
-         $x++;
-      }
-         
-      $sql = "INSERT INTO Work_Experience VALUES (?, ?, ?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($workEmployerArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $workEmployerArray[$x], $workPositionArray[$x], $workStartArray[$x], $workEndArray[$x], $workHoursArray[$x], $workHealthcareArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Shadow_Experience VALUES (?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($shadowLastNameArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $shadowLastNameArray[$x], $shadowFirstNameArray[$x], $shadowSpecialtyArray[$x], $shadowHoursArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Volunteer_Experience VALUES (?, ?, ?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($volunteerOrgArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $volunteerOrgArray[$x], $volunteerStartArray[$x], $volunteerEndArray[$x], $volunteerHoursArray[$x], $volunteerAvgArray[$x], $volunteerHealthcareArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Study_Abroad VALUES (?, ?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($abroadSchoolArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $abroadSchoolArray[$x], $abroadStartArray[$x], $abroadEndArray[$x], $abroadCityArray[$x], $abroadCountryArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Event VALUES (?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($eventNameArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $eventNameArray[$x], $eventCompletedArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Letter_Join VALUES (?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($letterWriterArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($letterWriterArray[$x], $studentID, $letterDateArray[$x]));
-         $x++;
-      }
-      
-      $sql = "INSERT INTO Interview VALUES (?, ?, ?, ?, ?)";
-      $query = $conn->prepare($sql);
-      $query->execute(array($studentID, $contactedStudent, $interviewDate, $transmitDate, $committeeNote));  
-      
-      $sql = "INSERT INTO Interview_Join VALUES (?, ?)";
-      $query = $conn->prepare($sql);
-      $count = count($committeeMemberArray);
-      $x = 0;
-      while($x < $count) {
-         $query->execute(array($studentID, $committeeMemberArray[$x]));
-         $x++;
-      }
-   }
   
    private function prepareFormOptions() {
       $formOptions = array();
@@ -1582,7 +1720,7 @@ class finalModel {
       while($row = $query->fetch(PDO::FETCH_ASSOC)) {
          $formOptions['Writers'] .= '<option value="' .$row['writerid']. '">' .$row['writerid']. ': ' .$row['first_name']. ' ' .$row['last_name']. '</option>';
       }
-      $formOptions['Writers'] .= '</select></td><td><input type="text" class="form-control" name="Letter_Date[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder writerAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';
+      $formOptions['Writers'] .= '</select></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Letter_Date[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder writerAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';
       
       $sql = "SELECT * FROM Interviewer ORDER BY InterviewerID";
       $query = $conn->prepare($sql);
@@ -1633,6 +1771,17 @@ class finalModel {
       $query->execute(array($ID));
       
       $i = 1;
+      if($query->rowCount() == 0) {
+         $formOptions['Writers'] .= '<tr id="writerRow'.$i.'"><td id="writerOptions"><select class="form-control" name="Letter_Writers[]"><option value=" "></option>';
+         $subsql = "SELECT * FROM Letter_Writer ORDER BY WriterID";
+         $subquery = $conn->prepare($subsql);
+         $subquery->execute();
+         while($subrow = $subquery->fetch(PDO::FETCH_ASSOC)) {
+               $formOptions['Writers'] .= '<option value="' .$subrow['writerid']. '">' .$subrow['writerid']. ': ' .$subrow['first_name']. ' ' .$subrow['last_name']. '</option>';  
+         }
+         $formOptions['Writers'] .= '</select></td><td><input type="text" class="form-control" name="Letter_Date[]" value="'.$row['reception_date'].'"></td><td class="text-right"><a href="#"><img class="iconBorder writerAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';
+         
+      } else {
       while($row = $query->fetch(PDO::FETCH_ASSOC)) {
          $formOptions['Writers'] .= '<tr id="writerRow'.$i.'"><td id="writerOptions"><select class="form-control" name="Letter_Writers[]">';
          $subsql = "SELECT * FROM Letter_Writer ORDER BY WriterID";
@@ -1652,6 +1801,7 @@ class finalModel {
          }
          $i++;
       }
+      }
       
 
       
@@ -1663,6 +1813,17 @@ class finalModel {
       $query->execute(array($ID));
       
       $i = 1;
+      if($query->rowCount() == 0) {
+          $formOptions['Members'] .= '<tr id="memberRow'.$i.'"><td id="memberOptions"><select class="form-control" name="Committee_Members[]"><option value=" "></option>';
+         $subsql = "SELECT * FROM Interviewer ORDER BY InterviewerID";
+         $subquery = $conn->prepare($subsql);
+         $subquery->execute();
+         while($subrow = $subquery->fetch(PDO::FETCH_ASSOC)) {
+               $formOptions['Members'] .= '<option value="' .$subrow['interviewerid']. '">' .$subrow['interviewerid']. ': ' .$subrow['first_name']. ' ' .$subrow['last_name']. '</option>';   
+         }
+         $formOptions['Members'] .= '</select></td><td class="text-right"><a href="#"><img class="iconBorder memberAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a></td></tr>';
+         
+      } else {
       while($row = $query->fetch(PDO::FETCH_ASSOC)) {
          $formOptions['Members'] .= '<tr id="memberRow'.$i.'"><td id="memberOptions"><select class="form-control" name="Committee_Members[]">';
          $subsql = "SELECT * FROM Interviewer ORDER BY InterviewerID";
@@ -1682,6 +1843,7 @@ class finalModel {
          }
          $i++;
       }
+      }
       
       
 
@@ -1689,83 +1851,88 @@ class finalModel {
       return $formOptions;
    }
    
-   
-}   
-   
-   
-   
+   private function runQuery() {
+      $conn = $this->initDatabaseConnection();
+      
+      $type = $_POST['type'];
+      $tableData = '';
+      $recordData = '';
+      
+      switch($type) {
+         case 'event':
+            $input = $_POST['event'];
+            $tableSource = '<h3 class="center">'.$input.' Attendance</h3>';
+            $sql = 'SELECT StudentID, Last_Name, First_Name
+                  FROM Student 
+                  WHERE StudentID NOT IN (
+                  SELECT S.StudentID
+                  FROM Student S, Event E
+                  WHERE E.StudentID = S.StudentID AND E.Event_Name = ?
+                  )
+                  ORDER BY Last_Name ASC
+                  ';
+            
+            $query = $conn->prepare($sql);
+            $query->execute(array($input));
 
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         case 'ethnic':
+            $input = $_POST['ethnicity'];
+            $tableSource = '<h3 class="center">'.$input.' Students</h3>';
+            $sql = 'SELECT StudentID, Last_Name, First_Name FROM Student WHERE Ethnic_Group = ?';
+            
+            $query = $conn->prepare($sql);
+            $query->execute(array($input));
 
-//   private function updateStudentData($mysqli){
-//      $First_Name = $_POST['First_Name'];
-//      $Last_Name = $_POST['Last_Name'];
-//      $StudentID = $_POST['StudentID'];
-//      $Local_Address = $_POST['Local_Address'];
-//      $Phone = $_POST['Phone'];
-//      $Email = $_POST['Email'];
-//      $State = $_POST['State'];
-//      $Candidate = $_POST['Candidate'];
-//      $Bryant_Status = $_POST['Bryant_Status'];
-//      $ED_Status = $_POST['ED_Status'];
-//      $MDPHD_Status = $_POST['MDPHD_Status'];
-//      $MU_Status = $_POST['MU_Status'];
-//      $First_Status = $_POST['First_Status'];
-//      
-//      $First_School = $_POST['First_School'];
-//      $Second_School = $_POST['Second_School'];
-//      $Third_School = $_POST['Third_School'];
-//      $Fourth_School = $_POST['Fourth_School'];
-//      $Fifth_School = $_POST['Fifth_School'];
-//   
-//      if(!$query = $mysqli->prepare("UPDATE Students SET First_NAME = ?, Last_Name = ?, Local_Address = ?, Phone = ?, Email = ?, State = ?, Candidate = ?, Bryant_Status = ?, ED_Status = ?, MDPHD_Status = ?, MU_Status = ?, First_Status = ? WHERE StudentID = ?")){
-//         echo "Unable to update student data at this time. Try again!";
-//         exit;  
-//      }
-//      
-//      $query->bind_param("sssssssssssss", $First_Name, $Last_Name, $Local_Address, $Phone, $Email, $State, $Candidate, $Bryant_Status, $ED_Status, $MDPHD_Status, $MU_Status, $First_Status, $StudentID);
-//      $query->execute();
-//      
-//      if(!$query = $mysqli->prepare("DELETE FROM Applications WHERE StudentID = ?")){
-//         echo "Unable to update student school data at this time. Try again!";
-//         exit;  
-//      }
-//      
-//      $query->bind_param("s", $StudentID);
-//      $query->execute();
-//      
-//      if(!$query = $mysqli->prepare("INSERT INTO Applications (StudentID, School_Name) VALUES (?, ?);")){
-//         echo "Unable to update student school data at this time. Try again!";
-//         exit; 
-//      }
-//      
-//      if($First_School != 'N/A'){
-//      $query->bind_param("ss", $StudentID, $First_School);
-//      $query->execute();
-//      }
-//      if($Second_School != 'N/A'){
-//      $query->bind_param("ss", $StudentID, $Second_School);
-//      $query->execute();
-//      }
-//      if($Third_School != 'N/A'){
-//      $query->bind_param("ss", $StudentID, $Third_School);
-//      $query->execute();
-//      }
-//      if($Fourth_School != 'N/A'){
-//      $query->bind_param("ss", $StudentID, $Fourth_School);
-//      $query->execute();
-//      }
-//      if($Fifth_School != 'N/A'){
-//      $query->bind_param("ss", $StudentID, $Fifth_School);
-//      $query->execute();
-//      }
-//      
-//      $query->close();
-//      $mysqli->close();
-//   }
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         case 'working':
+            $tableSource = '<h3 class="center">Working Students</h3>';
+            $sql = 'SELECT DISTINCT COUNT(StudentID), AVG(Hours_Per_Week) FROM Work_Experience';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr><tr><td>Average Hours Per Week</td><td>'.$row['avg'].'</td></tr></tbody></table>';
+            $sql = 'SELECT StudentID, First_Name, Last_Name FROM Student WHERE StudentID IN (SELECT DISTINCT StudentID FROM Work_Experience) ORDER BY Last_Name ASC';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         case 'military':
+            $tableSource = '<h3 class="center">Military Students</h3>';
+            $sql = "SELECT COUNT(StudentID) FROM Student WHERE Military_Service = 'Yes'";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            $sql = "SELECT StudentID, First_Name, Last_Name FROM Student WHERE Military_Service = 'Yes'";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         
 
-
-   
-
+      }
+       
+      return array($tableData, $recordData, $tableSource);
+      
+      
+      
+   }
+}      
 ?>
 
 

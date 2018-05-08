@@ -11,7 +11,7 @@ class finalView{
    //This function constructs the page based on the values passed from the controller. 
       
       if($source === 'formContent'){
-         $this->createForm($formOptions, $studentData, $recordData); 
+         $this->createForm($formOptions, $studentData, $recordData, $group); 
       }
       if($tableData){
          $this->addTableData($tableData, $tableSource);
@@ -19,6 +19,11 @@ class finalView{
       
       if($source === 'recordContent'){
          $this->createRecordData($recordData, $group, $studentData);
+      }
+      
+      if($source === 'queryResult') {
+         $this->createQueryResult($tableData, $recordData, $tableSource);
+         $source = 'queryContent';
       }
       
       if($source === 'loginContent'){
@@ -68,24 +73,28 @@ class finalView{
             <li class="nav-item dropdown nav-fill navCSS">
                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Advisors</a>
                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=newAdvisor';">New Advisor</a>
                   <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=allAdvisors';">View All Advisors</a>
                </div>
             </li>
             <li class="nav-item dropdown navCSS">
                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Letter Writers</a>
                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=newWriter';">New Writer</a>
                   <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=allWriters';">View All Writers</a>
                </div>
             </li>
             <li class="nav-item dropdown navCSS">
                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Committee Members</a>
                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=newMember';">New Committee Member</a>
                   <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=allMembers';">View All Committee Members</a>
                </div>
             </li>
             <li id="loginButton" class="nav-item dropdown navCSS">
                <a class="nav-link dropdown-toggle loginHover" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"><span><img class='keyIcon' src='Images/open-iconic/png/key-2x.png' alt='Logged In Icon'> Admin</span></a>
                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=queryPage';">Queries</a>
                   <a class="dropdown-item" href="#" onclick="window.location='{$url}?nav=logout';">Logout</a>
                </div>
             </li>
@@ -204,6 +213,9 @@ EOT;
             <select class="form-control displayInline" name="searchBy" id="searchBy">
                <option value="StudentID">StudentID</option>
                <option value="Student_Last_Name">Student Last Name</option>
+               <option value="Advisor_Last_Name">Advisor Last Name</option>
+               <option value="Letter_Writer_Last_Name">Letter Writer Last Name</option>
+               <option value="Committee_Member_Last_Name">Committee Member Last Name</option>
             </select>   
          
          <input id="searchText" class="form-control displayInline" name="searchText" type="text" placeholder="Search" aria-label="Search">
@@ -227,7 +239,9 @@ EOT;
    
    var $writerCloser = '<th>Reception Date</th></tr></thead><tbody>'; 
    
-   var $studentWriterCloser = '<th>Reception Date</th><th class="text-right">Edit/Delete</th></tr></thead><tbody>';
+   var $studentWriterCloser = '<th>Reception Date</th><th class="text-right">Remove</th></tr></thead><tbody>';
+   
+   var $studentInterviewerCloser = '<th class="text-right">Remove</th></tr></thead><tbody>';
    
    var $advisorCloser = '<th class="text-right">Edit</th></tr></thead><tbody>';
    
@@ -262,6 +276,11 @@ EOT;
          $this->viewContent .= $this->defaultCloser;
       }
       if($tableSource === 'memberStudents') {
+         $this->viewContent .= '<h2 class="center groupSelect">Student List</h2>';
+         $this->viewContent .= $this->viewStarter;
+         $this->viewContent .= $this->interviewCloser;   
+      }
+      if($tableSource === 'advisorStudents') {
          $this->viewContent .= '<h2 class="center groupSelect">Student List</h2>';
          $this->viewContent .= $this->viewStarter;
          $this->viewContent .= $this->interviewCloser;   
@@ -478,7 +497,7 @@ EOT;
   <div id="interviewInfo" class="tab-pane fade" role="tabpanel">
       ' .$studentData['interviewData']. '
       <hr><h3 class="center groupSelect">Committee Member List</h3>
-      ' .$this->viewStarter .$this->defaultCloser .$studentData['interviewerData']. '
+      ' .$this->viewStarter .$this->studentInterviewerCloser .$studentData['interviewerData']. '
   </div>
 </div>
       <div class="hiddenSubmitDiv"></div>';
@@ -597,22 +616,95 @@ EOT;
       }
    }
    
-     private function createForm($formOptions, $studentData, $recordData){
+
+
+   
+   
+     private function createForm($formOptions, $studentData, $recordData, $group){
    //This function adds the form options, finishing the $formContent source so it can be inserted completed.   
-      
+      if(!$studentData) {
+        
+         $formStatus = 'new';
+         $formTitle = 'New '; 
+         $formTitle .= $group;
+         $groupSelect = $group.' List';
+         
+         $firstName = '';
+         $lastName = '';
+         $email = '';
+         $ID = '';
+         
+         if($recordData){
+            $formStatus = 'update';
+            $formTitle = 'Update ';
+            $formTitle .= $group;
+            $firstName = $recordData['first_name'];
+            $lastName = $recordData['last_name'];
+            $email = $recordData['email'];
+            switch($group) {
+               case 'MedOpp Advisor':
+                  $ID = $recordData['advisorid'];
+                  break;
+               case 'Letter Writer':
+                  $ID = $recordData['writerid'];
+                  break;
+               case 'Committee Member':
+                  $ID = $recordData['interviewerid'];
+                  break;
+            }
+         }
+         
+         $this->formContent .= '
+            <h2 class="center">'.$formTitle.'</h2>
+            <hr>
+            <form action="index.php" method="post">
+            <input type="hidden" name="action" value="submitForm"><input type="hidden" name="status" value="' .$formStatus. '">
+            <input type="hidden" name="groupSelect" value="'.$groupSelect.'">
+
+
+
+            <table class="table table-striped tableBorder">
+               <tbody>
+                  <tr>
+                     <td>First / Last Name:</td>
+                     <td>
+                        <div class="form-row">
+                           <div class="col div-inline">
+                              <input type="text" class="form-control" id="first_name" name="First_Name"  value="'.$firstName.'" required>
+                           </div>
+
+                           <div class="col div-inline">
+                             <input type="text" class="form-control" name="Last_Name" value="'.$lastName.'" required>
+                           </div>
+                        </div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>ID:</td>
+                     <td><input type="text" pattern="[0-9]+" class="form-control" name="ID" value="'.$ID.'" readonly></td>
+
+                  </tr>
+                  <tr>
+                     <td>Email:</td>
+                     <td><input type="text" class="form-control" name="Email" value="'.$email.'"></td>
+                  </tbody>
+               </table>
+               <input type="submit" class="btn btn-primary" value="Submit">
+      </form>';  
+      } else {
       $editStatus = '';
       $formStatus = 'new';
       $formTitle = 'New Student';
         
-      $firstName = ' ';
-      $middleName = ' ';
-      $lastName = ' ';
-      $studentID = ' ';
-      $email = ' ';
-      $phone = ' ';
-      $dob = ' ';
-      $sex = ' ';
-      $ethnicGroup = ' ';
+      $firstName = '';
+      $middleName = '';
+      $lastName = '';
+      $studentID = '';
+      $email = '';
+      $phone = '';
+      $dob = '';
+      $sex = '';
+      $ethnicGroup = '';
       $disadvantagedYes = '';
       $disadvantagedNo = '';
       $firstGenerationYes = '';
@@ -620,11 +712,11 @@ EOT;
       $militaryYes = '';
       $militaryNo = '';
       $address = ' ';
-      $city = ' ';
-      $state = ' ';
-      $county = ' ';
-      $postal = ' ';
-      $country = ' ';
+      $city = '';
+      $state = '';
+      $county = '';
+      $postal = '';
+      $country = '';
       $languages = '
       <tr><td>  
          <input type="text" class="form-control" name="Language[]" value=" ">
@@ -633,21 +725,21 @@ EOT;
          <a href="#"><img class="iconBorder languageAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
       </td><tr>';
         
-      $applicationYear = ' ';
-      $packetYes = ' ';
-      $packetNo = ' ';
-      $datePaid = ' ';
-      $firstTerm = ' ';
-      $applicationStatus = ' ';
-      $hsGPA = ' ';
-      $GPA = ' ';
-      $credits = ' ';
+      $applicationYear = '';
+      $packetYes = '';
+      $packetNo = '';
+      $datePaid = '';
+      $firstTerm = '';
+      $applicationStatus = '';
+      $hsGPA = '';
+      $GPA = '';
+      $credits = '';
       $eligibleYes = '';
       $eligibleNo = '';
       $participatingYes = '';
       $participatingNo = '';
-      $honorCredits = ' ';
-      $courses = ' ';
+      $honorCredits = '';
+      $courses = '';
       $degrees = '
       <tr>
       <td>
@@ -666,10 +758,10 @@ EOT;
          <input type="text" class="form-control" name="Extra_Org[]" value=" ">   
       </td>
       <td>
-         <input type="text" class="form-control" name="Extra_Start[]" value=" ">   
+         <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Extra_Start[]" value=" ">   
       </td>
       <td>
-         <input type="text" class="form-control" name="Extra_End[]" value=" ">   
+         <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Extra_End[]" value=" ">   
       </td>
       <td class="text-right">
          <a href="#"><img class="iconBorder extraAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -681,10 +773,10 @@ EOT;
             <input type="text" class="form-control" name="Group_Org[]" value=" ">   
          </td>
          <td>
-            <input type="text" class="form-control" name="Group_Start[]" value=" ">   
+            <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Group_Start[]" value=" ">   
          </td>
          <td>
-            <input type="text" class="form-control" name="Group_End[]" value=" ">   
+            <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Group_End[]" value=" ">   
          </td>
          <td class="text-right">
             <a href="#"><img class="iconBorder groupAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -700,10 +792,10 @@ EOT;
                   <input type="text" class="form-control" name="Leader_Pos[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Leader_Start[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Leader_Start[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Leader_End[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Leader_End[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder leaderAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -718,7 +810,7 @@ EOT;
                   <input type="text" class="form-control" name="Work_Pos[]" value=" ">   
                </td>
                 <td>
-                  <input type="text" class="form-control" name="Work_Hours[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Work_Hours[]" value=" ">   
                </td>
                <td>
                   <select id="choice" class="form-control" name="Work_Healthcare[]">
@@ -728,10 +820,10 @@ EOT;
                   </select>   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Work_Start[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Work_Start[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Work_End[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Work_End[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder workAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -750,10 +842,10 @@ EOT;
                </td>
                
                <td>
-                  <input type="text" class="form-control" name="Abroad_Start[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Abroad_Start[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Abroad_End[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Abroad_End[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder abroadAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -765,10 +857,10 @@ EOT;
                   <input type="text" class="form-control" name="Volunteer_Org[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Volunteer_Hours[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Volunteer_Hours[]" value=" ">   
                </td>
                 <td>
-                  <input type="text" class="form-control" name="Volunteer_Avg[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Volunteer_Avg[]" value=" ">   
                </td>
                <td>
                   <select id="choice" class="form-control" name="Volunteer_Healthcare[]">
@@ -778,10 +870,10 @@ EOT;
                   </select>   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Volunteer_Start[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Volunteer_Start[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Volunteer_End[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Volunteer_End[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder volunteerAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -802,7 +894,7 @@ EOT;
                   <input type="text" class="form-control" name="Research_First_Name[]" value=" ">   
                </td>
                 <td>
-                  <input type="text" class="form-control" name="Research_Hours[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Research_Hours[]" value=" ">   
                </td>
                <td>
                   <select id="choice" class="form-control" name="Research_Volunteer[]">
@@ -812,10 +904,10 @@ EOT;
                   </select>   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Research_Start[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Research_Start[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Research_End[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Research_End[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder researchAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -833,7 +925,7 @@ EOT;
                   <input type="text" class="form-control" name="Shadow_Specialty[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Shadow_Hours[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Shadow_Hours[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder shadowAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -845,10 +937,10 @@ EOT;
                   <input type="text" class="form-control" name="Test_Name[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Test_Date[]" value=" ">   
+                  <input type="text" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." class="form-control" name="Test_Date[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Test_Score[]" value=" ">   
+                  <input type="text" pattern="([0-9]+|[\s])" title="Numbers only please." class="form-control" name="Test_Score[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder testsAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -884,7 +976,7 @@ EOT;
                   <input type="text" class="form-control" name="Event_Name[]" value=" ">   
                </td>
                <td>
-                  <input type="text" class="form-control" name="Event_Completed[]" value=" ">   
+                  <input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Event_Completed[]" value=" ">   
                </td>
                <td class="text-right">
                   <a href="#"><img class="iconBorder eventAddRow" src="Images/open-iconic/png/plus-2x.png" alt="Edit Icon"></a>
@@ -893,9 +985,9 @@ EOT;
         
       $contactedYes = '';
       $contactedNo = '';
-      $interviewDate = ' ';
-      $transmitDate = ' ';
-      $committeeNote = ' ';
+      $interviewDate = '';
+      $transmitDate = '';
+      $committeeNote = '';
         
       
         
@@ -1032,7 +1124,8 @@ EOT;
             </tr>
             <tr>
                <td>StudentID:</td>
-               <td><input type="text" class="form-control" name="StudentID" value="'.$studentID.'" required '.$editStatus.'></td>
+               <td><input type="text" pattern="[0-9]{8}" class="form-control" name="StudentID" value="'.$studentID.'" required '.$editStatus.'>
+                  <small id="stuIDHelp" class="form-text text-muted">8 digit MU Student ID</small></td>
             </tr>
             <tr>
                <td>MedOpp Advisor:</td>
@@ -1044,14 +1137,16 @@ EOT;
             </tr>
             <tr>
                <td>Phone:</td>
-               <td><input type="text" class="form-control" name="Phone" value="'.$phone.'"></td>
+               <td><input type="text" pattern="[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}" class="form-control" name="Phone" value="'.$phone.'">
+                  <small class="form-text text-muted">Please supply in XXX-XXX-XXXX format.</small></td>
             </tr>
             <tr>
                <td>Date of Birth / Sex:</td>
                <td>
                   <div class="form-row">
                      <div class="col div-inline">
-                        <input type="text" class="form-control" name="DOB" value="'.$dob.'">
+                        <input type="text" pattern="[0-9]{4}[\-][0-9]{2}[\-][0-9]{2}" class="form-control" name="DOB" value="'.$dob.'">
+                        <small class="form-text text-muted">Please supply in XXXX-XX-XX format.</small>
                      </div>
                      <div class="col div-inline">
                         <select id="sex" class="form-control" name="Sex">
@@ -1149,7 +1244,8 @@ EOT;
          <tbody>
             <tr>
                <td>Application Year:</td>
-               <td><input type="text" class="form-control" name="Application_Year" value="'.$applicationYear.'"></td>
+               <td><input type="text" class="form-control" pattern="[0-9]{4}" name="Application_Year" value="'.$applicationYear.'"><small class="form-text text-muted">XXXX Format</small></td>
+               
             </tr>
             <tr>
                <td>Packet Received / Date Paid:</td>
@@ -1160,14 +1256,15 @@ EOT;
                         <input type="radio" class="" name="Packet_Received" value="No" '.$packetNo.'> No 
                      </div>
                      <div class="col div-inline">
-                        <input type="text" class="form-control" name="Date_Paid" value="'.$datePaid.'">
+                        <input type="text" pattern="[0-9]{4}[\-][0-9]{2}[\-][0-9]{2}" class="form-control" name="Date_Paid" value="'.$datePaid.'">
+                        <small class="form-text text-muted">Please supply in XXXX-XX-XX format.</small>
                      </div>
                   </div>
                </td>
             </tr>
             <tr>
                <td>First Term:</td>
-               <td><input type="text" class="form-control" name="First_Term" value="'.$firstTerm.'"></td>
+               <td><input type="text" class="form-control" name="First_Term" pattern="[(FS|SP)]{2}[0-9]{4}" value="'.$firstTerm.'"><small class="form-text text-muted">Please supply in FSXXXX or SPXXXX format.</small></td>
             </tr>
             <tr>
                <td>Application Status:</td>
@@ -1182,17 +1279,18 @@ EOT;
             </tr>
             <tr>
                <td>High School Core GPA:</td>
-               <td><input type="text" class="form-control" name="HS_GPA" value="'.$hsGPA.'"></td>
+               <td><input type="text" class="form-control" pattern="[0-9]{1}[.][0-9]{3}" name="HS_GPA" value="'.$hsGPA.'"><small class="form-text text-muted">Please supply in X.XXX format.</small></td>
             </tr>
             <tr>
                <td>Cumulative GPA / Total Credits:</td>
                <td>
                   <div class="form-row">
                      <div class="col div-inline">
-                        <input type="text" class="form-control" name="GPA" value="'.$GPA.'">
+                        <input type="text" pattern="[0-9]{1}[.][0-9]{3}" class="form-control" name="GPA" value="'.$GPA.'">
+                        <small class="form-text text-muted">Please supply in X.XXX format.</small>
                      </div>
                      <div class="col div-inline">
-                       <input type="text" class="form-control" name="Credits" value="'.$credits.'">
+                       <input type="text" pattern="[0-9]+" title="Numbers only please." class="form-control" name="Credits" value="'.$credits.'">
                      </div>
                   </div>
                </td>
@@ -1226,11 +1324,11 @@ EOT;
             </tr>
             <tr>
                <td>Credit Hours:</td>
-               <td><input type="text" class="form-control" name="Credit_Hours" value="'.$honorCredits.'"></td>
+               <td><input type="text" pattern="[0-9]+" title="Numbers only please." class="form-control" name="Credit_Hours" value="'.$honorCredits.'"></td>
             </tr>
             <tr>
                <td>Course Count:</td>
-               <td><input type="text" class="form-control" name="Course_Count" value="'.$courses.'"></td>
+               <td><input type="text" pattern="[0-9]+" title="Numbers only please." class="form-control" name="Course_Count" value="'.$courses.'"></td>
             </tr>
          </tbody>
       </table>
@@ -1458,11 +1556,11 @@ EOT;
             </tr>
             <tr>
                <td>Interview Date:</td>
-               <td><input type="text" class="form-control" name="Interview_Date" value="'.$interviewDate.'"></td>
+               <td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format."  name="Interview_Date" value="'.$interviewDate.'"></td>
             </tr>
             <tr>
                <td>Transmit Date:</td>
-               <td><input type="text" class="form-control" name="Transmit_Date" value="'.$transmitDate.'"></td>
+               <td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format."  name="Transmit_Date" value="'.$transmitDate.'"></td>
             </tr>
             <tr>
                <td>Committee Note:</td>
@@ -1489,382 +1587,71 @@ EOT;
 
 <input type="submit" class="btn btn-primary" value="Submit">
 </form>';
-        
-                       
-        
-        
-        
-        
-//        
-//        <div id="interviewInfo" class="tab-pane fade" role="tabpanel">
-//      ' .$studentData['interviewData']. '
-//      <hr><h3 class="center groupSelect">Committee Member List</h3>
-//      ' .$this->viewStarter .$this->defaultCloser .$studentData['interviewerData']. '
-//  </div>
-        
-        
-        
-//      $this->formContent .= '
-//      <div><h2 class="center">New Student</h2>
-//      <hr>
-//      <form action="index.php" method="post">
-//      <input type="hidden" name="action" value="submitForm"><input type="hidden" name="status" value="' .$formStatus. '">
-//      <ul class="nav nav-tabs" role="tablist">
-//            <li class="nav-item">
-//               <a class="nav-link active" role="tab" data-toggle="tab" href="#demo">Demographic Info</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#academicInfo">Academic Info</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#healthInfo">Health Profession Info</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#involvementInfo">Involvement</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#experienceInfo">Experience</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#eventInfo">Event Info</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#writerInfo">Recommendation Writer Info</a>
-//            </li>
-//            <li class="nav-item">
-//               <a class="nav-link" role="tab" data-toggle="tab" href="#interviewInfo">Interview Info</a>
-//            </li>
-//         </ul>
-//   <br>
-//   <div class="tab-content">
-//      <div id="demo" class="tab-pane fade show active" role="tabpanel">
-//         <div class="form-row">
-//            <div class="form-group col">
-//               <label for="fname">First Name:</label>
-//               <input type="text" class="form-control" id="fname" name="First_Name" value="' .$studentData['First_Name']. '" required>
-//         </div>
-//         <div class="form-group col">
-//            <label for="lname">Last Name:</label>
-//            <input type="text" class="form-control" id="lname" name="Last_Name" value="' .$studentData['Last_Name']. '" required>
-//         </div>
-//      </div>
-//      <div class="form-row">
-//         <div class="form-group col-md-4">
-//            <label for="stuID">MU Student ID#:</label>
-//            <input type="text" pattern="[0-9]{8}" class="form-control" id="stuID" name="StudentID" value="' .$studentData['StudentID']. '" ' .$editStatus. ' required>
-//            <small id="stuIDHelp" class="form-text text-muted">8 digit MU Student ID</small>
-//         </div>
-//         <div class="form-group col-md-8">
-//            <label for="address">Local Address:</label>
-//            <input type="text" class="form-control" id="address" name="Local_Address" value="' .$studentData['Local_Address']. '" required>
-//         </div>
-//      </div>
-//      <div class="form-row">
-//         <div class="form-group col-md-4">
-//            <label for="phone">Phone:</label>
-//            <input type="text" pattern="[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}" class="form-control" id="phone" name="Phone" value="' .$studentData['Phone']. '" required>
-//            <small id="phoneInfo" class="form-text text-muted">Please supply in XXX-XXX-XXXX format.</small>
-//         </div>
-//         <div class="form-group col-md-8">
-//            <label for="email">Email:</label>
-//            <input type="email" class="form-control" id="email" name="Email" value="' .$studentData['Email']. '" required>
-//         </div>
-//      </div>
-//   </div>
-//   
-//   <div id="academicInfo" class="tab-pane fade" role="tabpanel">
-//      
-//      <hr><h3>Honors Info</h3>
-//      
-//      <hr><h3>Academic Plan</h3>
-//   </div>
-//   
-//   <div id="involvementInfo" class="tab-pane fade" role="tabpanel">
-//      <br><h4>Extracurricular Activities</h4>
-//      <hr><h3>Student Groups</h3>
-//      <hr><h3>Leadership Positions</h3>
-//  </div>
-//  
-//  <div id="experienceInfo" class="tab-pane fade" role="tabpanel">
-//    <br><h3>Research</h3>
-//      <hr><h3>Work</h3>
-//      <hr><h3>Shadow</h3>
-//      <hr><h3>Volunteer</h3>
-//      <hr><h3>Study Abroad</h3>
-//  </div>
-//  
-//  <div id="healthInfo" class="tab-pane fade" role="tabpanel">
-//    <br><h3>Health Profession Tests</h3>
-//      <hr><h3>Health Profession Schools</h3>
-//  </div>
-//  
-//  <div id="eventInfo" class="tab-pane fade" role="tabpanel">
-//      <h2>eventTab</h2>
-//  </div>
-//  
-//  <div id="writerInfo" class="tab-pane fade" role="tabpanel"><br>
-//      <h2 class="center groupSelect">Letter Writer List</h2>
-//  </div>
-//  
-//  <div id="interviewInfo" class="tab-pane fade" role="tabpanel">
-//      <hr><h3 class="center groupSelect">Committee Member List</h3>
-//  </div>
-//  
-//</div>
-//<input type="submit" class="btn btn-primary" value="Submit">
-//</form>';
-      
-      
-      
-      
-      
-      
-      
-      
-      
+   }}
    
-//   <div class="form-row">
-//      <div class="form-group col">
-//         <label for="fname">First Name:</label>
-//         <input type="text" class="form-control" id="fname" name="First_Name" value="' .$studentData['First_Name']. '" required>
-//      </div>
-//      <div class="form-group col">
-//         <label for="lname">Last Name:</label>
-//         <input type="text" class="form-control" id="lname" name="Last_Name" value="' .$studentData['Last_Name']. '" required>
-//      </div>
-//   </div>
-//   <div class="form-row">
-//      <div class="form-group col-md-4">
-//         <label for="stuID">MU Student ID#:</label>
-//         <input type="text" pattern="[0-9]{8}" class="form-control" id="stuID" name="StudentID" value="' .$studentData['StudentID']. '" ' .$editStatus. ' required>
-//         <small id="stuIDHelp" class="form-text text-muted">8 digit MU Student ID</small>
-//      </div>
-//      <div class="form-group col-md-8">
-//         <label for="address">Local Address:</label>
-//         <input type="text" class="form-control" id="address" name="Local_Address" value="' .$studentData['Local_Address']. '" required>
-//      </div>
-//   </div>
-//   <div class="form-row">
-//      <div class="form-group col-md-4">
-//         <label for="phone">Phone:</label>
-//         <input type="text" pattern="[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}" class="form-control" id="phone" name="Phone" value="' .$studentData['Phone']. '" required>
-//         <small id="phoneInfo" class="form-text text-muted">Please supply in XXX-XXX-XXXX format.</small>
-//      </div>
-//      <div class="form-group col-md-8">
-//         <label for="email">Email:</label>
-//         <input type="email" class="form-control" id="email" name="Email" value="' .$studentData['Email']. '" required>
-//      </div>
-//   </div>
-//   
-//   <input type="submit" class="btn btn-primary" value="Submit">
-//   </form>';
+   var $queryContent = '
+      <h4>Select students not present for a particular event</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <label for="username">Event:</label>
+      <input type="hidden" name="type" value="event">
+      <input type="text" class="form-control" name="event" required>
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
+      <h4>Select students for a particular ethnicity</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <label>Ethnicity:</label>
+      <input type="hidden" name="type" value="ethnic">
+      <input type="text" class="form-control" name="ethnicity" required>
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
+      <h4>How many are working? Average Hours?</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="working">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
+      <h4>How many have served in the military?</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="military">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+   ';
+   
+   private function createQueryResult($tableData, $recordData, $tableSource){
+      $this->queryContent = $tableSource;
+      $this->queryContent .= '
+         <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+               <a class="nav-link active" role="tab" data-toggle="tab" href="#results">Results</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link" role="tab" data-toggle="tab" href="#studentList">Student List</a>
+            </li>
+         </ul>
+         
+         <div class="tab-content">
+            <div id="results" class="tab-pane fade show active" role="tabpanel">';
+      $this->queryContent .= $recordData; 
+      $this->queryContent .= '</div>
+            <div id="studentList" class="tab-pane fade" role="tabpanel">';
+                  $this->queryContent .= '<h2 class="center groupSelect">Student List</h2>';
+                  $this->queryContent .= $this->viewStarter;
+                  $this->queryContent .= $this->defaultCloser;
+                  $this->queryContent .= $tableData;
+                  $this->queryContent .= '</tbody></table><div class="hiddenSubmitDiv"></div>
+            </div>
+         </div>';
    }
-
    
 }
-
-
-
-
-
-
-
-//  private function createForm($formOptions, $studentData, $studentSchools){
-//   //This function adds the form options, finishing the $formContent source so it can be inserted completed.   
-//      
-//      $editStatus = '';
-//      $formStatus = 'new';
-//      
-//      $alloStatus = '';
-//      $osteoStatus = '';
-//      $dentStatus = '';
-//      $podStatus = '';
-//      $bryantYes = '';
-//      $bryantNo = '';
-//      $edYes = '';
-//      $edNo = '';
-//      $mdYes = '';
-//      $mdNo = '';
-//      $muYes = '';
-//      $muNo = '';
-//      $firstYes = '';
-//      $firstNo = '';
-//      
-//      if($studentData){
-//         $editStatus = "readonly";
-//         $formStatus = "update";
-//         if($studentData['Candidate'] === 'Allopathic Medicne') $alloStatus = "selected";
-//         if($studentData['Candidate'] === 'Osteopathic Medicine') $osteoStatus = "selected";
-//         if($studentData['Candidate'] === 'Dentistry') $dentStatus = "selected";
-//         if($studentData['Candidate'] === 'Podiatry') $podStatus = "selected";
-//      
-//         if($studentData['Bryant_Status'] === 'Yes') $bryantYes = 'checked';
-//         else $bryantNo = 'checked';
-//         if($studentData['ED_Status'] === 'Yes') $edYes = 'checked';
-//         else $edNo = 'checked';
-//         if($studentData['MDPHD_Status'] === 'Yes') $mdYes = 'checked';
-//         else $mdNo = 'checked';
-//         if($studentData['MU_Status'] === 'Yes') $muYes = 'checked';
-//         else $muNo = 'checked';
-//         if($studentData['MU_Status'] === 'Yes') $muYes = 'checked';
-//         else $muNo = 'checked';
-//         if($studentData['First_Status'] === 'Yes') $firstYes = 'checked';
-//         else $firstNo = 'checked';
-//         if($studentSchools[0]) 
-//            $selectedOption1 = '<option value="' .$studentSchools[0]["School_Name"]. '" selected>' .$studentSchools[0]["School_Name"]. '</option>';
-//         if($studentSchools[1]) 
-//            $selectedOption2 = '<option value="' .$studentSchools[1]["School_Name"]. '" selected>' .$studentSchools[1]["School_Name"]. '</option>';
-//         if($studentSchools[2]) 
-//            $selectedOption3 = '<option value="' .$studentSchools[2]["School_Name"]. '" selected>' .$studentSchools[2]["School_Name"]. '</option>';
-//         if($studentSchools[3]) 
-//            $selectedOption4 = '<option value="' .$studentSchools[3]["School_Name"]. '" selected>' .$studentSchools[3]["School_Name"]. '</option>';
-//         if($studentSchools[4]) 
-//            $selectedOption5 = '<option value="' .$studentSchools[4]["School_Name"]. '" selected>' .$studentSchools[4]["School_Name"]. '</option>';
-//      }
-//    
-//      $this->formContent .= '
-//   <h2 class="center">DEADLINE: MAY 18, 2018 BY 5 PM</h2>
-//   <h1 class="center">Committee Interview Applicant Information Form</h1>
-//   <hr>
-//   <form action="index.php" method="post">
-//   <input type="hidden" name="action" value="submitForm"><input type="hidden" name="status" value="' .$formStatus. '">
-//   <div class="form-row">
-//      <div class="form-group col">
-//         <label for="fname">First Name:</label>
-//         <input type="text" class="form-control" id="fname" name="First_Name" value="' .$studentData['First_Name']. '" required>
-//      </div>
-//      <div class="form-group col">
-//         <label for="lname">Last Name:</label>
-//         <input type="text" class="form-control" id="lname" name="Last_Name" value="' .$studentData['Last_Name']. '" required>
-//      </div>
-//   </div>
-//   <div class="form-row">
-//      <div class="form-group col-md-4">
-//         <label for="stuID">MU Student ID#:</label>
-//         <input type="text" pattern="[0-9]{8}" class="form-control" id="stuID" name="StudentID" value="' .$studentData['StudentID']. '" ' .$editStatus. ' required>
-//         <small id="stuIDHelp" class="form-text text-muted">Your 8 digit MU Student ID</small>
-//      </div>
-//      <div class="form-group col-md-8">
-//         <label for="address">Local Address:</label>
-//         <input type="text" class="form-control" id="address" name="Local_Address" value="' .$studentData['Local_Address']. '" required>
-//      </div>
-//   </div>
-//   <div class="form-row">
-//      <div class="form-group col-md-4">
-//         <label for="phone">Phone:</label>
-//         <input type="text" pattern="[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}" class="form-control" id="phone" name="Phone" value="' .$studentData['Phone']. '" required>
-//         <small id="phoneInfo" class="form-text text-muted">Please supply in XXX-XXX-XXXX format.</small>
-//      </div>
-//      <div class="form-group col-md-8">
-//         <label for="email">Email:</label>
-//         <input type="email" class="form-control" id="email" name="Email" value="' .$studentData['Email']. '" required>
-//         <small id="emailInfo" class="form-text text-muted">Include where you can be reached during Summer/Fall Semeseter. If this information changes, be sure to notify the MedOpp Office.</small>
-//      </div>
-//   </div>
-//   <div class="form-row">
-//      <div class="form-group col">
-//         <label for="state">Legal resident of what state:</label>
-//         <input type="text" class="form-control" id="state" name="State" value="' .$studentData['State']. '" required>
-//      </div>
-//      <div class="form-group col">
-//         <label for="candidate">Candidate For:</label>
-//         <select id="candidate" class="form-control" name="Candidate">
-//            <option value="Allopathic Medicine"' .$alloStatus. '>Allopathic Medicine</option>
-//            <option value="Osteopathic Medicine"' .$osteoStatus. '>Osteopathic Medicine</option>
-//            <option value="Dentistry"' .$dentStatus. '>Dentistry</option>
-//            <option value="Podiatry"' .$podStatus. '>Podiatry</option>
-//         </select>
-//      </div>
-//   </div>
-//   <div class="form-group row">
-//      <label class="col-md-3 form-control-label label-inline">Bryant Scholar:</label>
-//      <div class="col-md-3 div-inline">
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="Bryant_Status" value="Yes" ' .$bryantYes. ' required> Yes 
-//         </label>
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="Bryant_Status" value="No" ' .$bryantNo. ' required> No 
-//         </label>
-//      </div>
-//      <label class="col-md-3 form-control-label label-inline">Early Decision:</label>
-//      <div class="col-md-3 div-inline">
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="ED_Status" value="Yes" ' .$edYes. ' required > Yes 
-//         </label>
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="ED_Status" value="No" ' .$edNo. ' required> No 
-//         </label>
-//      </div>
-//   </div>
-//   <div class="form-group row">
-//      <label class="col-md-3 form-control-label label-inline">MD/PHD Applicant:</label>
-//      <div class="col-md-3 div-inline">
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="MDPHD_Status" value="Yes"' .$mdYes. ' required > Yes 
-//         </label>
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="MDPHD_Status" value="No"' .$mdNo. ' required> No 
-//         </label>
-//      </div>
-//      <label class="col-md-3 form-control-label label-inline">Enrolled at MU for FS2017?</label>
-//      <div class="col-md-3 div-inline">
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="MU_Status" value="Yes"' .$muYes. ' required > Yes 
-//         </label>
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="MU_Status" value="No"' .$muNo. ' required> No 
-//         </label>
-//      </div>
-//   </div>
-//   <div class="form-group row">
-//      <label class="col-md-9 form-control-label label-inline">Is this the first time you are applying to health professions schools?</label>
-//      <div class="col-md-3 div-inline">
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="First_Status" value="Yes"' .$firstYes. ' required > Yes 
-//         </label>
-//         <label class="radio-inline">
-//            <input type="radio" class="" name="First_Status" value="No"' .$firstNo. ' required> No 
-//         </label>
-//      </div>
-//   </div>
-//   <h3 class="center">List of Schools</h3>
-//    <p>Please remember:</p>
-//    <ul>
-//        <li>All letters must be received before the packet will be transmitted.</li>
-//        <li class="bold">Once a packet of letters is sent, any additional submissions will cost $10.</li>
-//        <li>Letters will not be sent until payment is recieved and you have submitted your AMCAS/AACOMAS/TMDSAS/AADSAS application.</li>
-//    </ul>
-//   <div class="form-group">
-//      <label>School 1</label>
-//      <select class="form-control" name="First_School">' .$selectedOption1. 
-//      ' ' .$formOptions. '
-//      </select>
-//   </div>
-//   <div class="form-group">
-//      <label>School 2</label>
-//      <select class="form-control" name="Second_School">' .$selectedOption2. 
-//      ' ' .$formOptions. '
-//      </select>
-//   </div>
-//   <div class="form-group">
-//      <label>School 3</label>
-//      <select class="form-control" name="Third_School">' .$selectedOption3. 
-//      ' ' .$formOptions. '
-//      </select>
-//   </div>
-//   <div class="form-group">
-//      <label>School 4</label>
-//      <select class="form-control" name="Fourth_School">' .$selectedOption4. 
-//      ' ' .$formOptions. '
-//      </select>
-//   </div>
-//   <div class="form-group">
-//      <label>School 5</label>
-//      <select class="form-control" name="Fifth_School">' .$selectedOption5. 
-//      ' ' .$formOptions. '
-//      </select>
-//   </div>
-//   <input type="submit" class="btn btn-primary" value="Submit">
-//   </form>';
-//   }
 ?>

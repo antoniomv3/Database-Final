@@ -87,7 +87,7 @@ $(document).ready(function(){
       event.preventDefault();
       $rowno = $("#testsTable tr").length;
       $rowno = $rowno + 1;
-      $("#testsTable tr:last").after('<tr id="testsRow' + $rowno + '"><td><input type="text" class="form-control" id="testname" name="Test_Name[]" value=" " required></td><td><input type="text" class="form-control" id="testdate" name="Test_Date[]" value=" " required></td><td><input type="text" class="form-control" id="testscore" name="Test_Score[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#testsTable tr:last").after('<tr id="testsRow' + $rowno + '"><td><input type="text" class="form-control" id="testname" name="Test_Name[]" value=" " required></td><td><input type="text" class="form-control" id="testdate" name="Test_Date[]" value=" " required></td><td><input type="text" pattern="[0-9]+" title="Numbers only please." class="form-control" id="testscore" name="Test_Score[]" value=" " required></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".schoolAddRow").click(function() {
@@ -101,63 +101,63 @@ $(document).ready(function(){
       event.preventDefault();
       $rowno = $("#extraTable tr").length;
       $rowno = $rowno + 1;
-      $("#extraTable tr:last").after('<tr id="extraRow' + $rowno + '"><td><input type="text" class="form-control" id="extraorg" name="Extra_Org[]" value=" " required></td><td><input type="text" class="form-control" id="extrastart" name="Extra_Start[]" value=" " required></td><td><input type="text" class="form-control" id="extraend" name="Extra_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#extraTable tr:last").after('<tr id="extraRow' + $rowno + '"><td><input type="text" class="form-control" id="extraorg" name="Extra_Org[]" value=" " required></td><td><input type="text" class="form-control" id="extrastart" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Extra_Start[]" value=" " required></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." id="extraend" name="Extra_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".groupAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#groupTable tr").length;
       $rowno = $rowno + 1;
-      $("#groupTable tr:last").after('<tr id="groupRow' + $rowno + '"><td><input type="text" class="form-control" id="grouporg" name="Group_Org[]" value=" " required></td><td><input type="text" class="form-control" id="groupstart" name="Group_Start[]" value=" " required></td><td><input type="text" class="form-control" id="groupend" name="Group_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#groupTable tr:last").after('<tr id="groupRow' + $rowno + '"><td><input type="text" class="form-control" id="grouporg" name="Group_Org[]" value=" " required></td><td><input type="text" class="form-control" id="groupstart" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Group_Start[]" value=" " required></td><td><input type="text" class="form-control" id="groupend" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Group_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".leaderAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#leaderTable tr").length;
       $rowno = $rowno + 1;
-      $("#leaderTable tr:last").after('<tr id="leaderRow' + $rowno + '"><td><input type="text" class="form-control" id="leaderorg" name="Leader_Org[]" value=" " required></td><td><input type="text" class="form-control" id="leaderpos" name="Leader_Pos[]" value=" " required></td><td><input type="text" class="form-control" id="leaderstart" name="Leader_Start[]" value=" " required></td><td><input type="text" class="form-control" id="leaderend" name="Leader_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#leaderTable tr:last").after('<tr id="leaderRow' + $rowno + '"><td><input type="text" class="form-control" id="leaderorg" name="Leader_Org[]" value=" " required></td><td><input type="text" class="form-control" id="leaderpos" name="Leader_Pos[]" value=" " required></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." id="leaderstart" name="Leader_Start[]" value=" " required></td><td><input type="text" class="form-control" id="leaderend" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Leader_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".researchAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#researchTable tr").length;
       $rowno = $rowno + 1;
-      $("#researchTable tr:last").after('<tr id="researchRow' + $rowno + '"><td><input type="text" class="form-control" name="Research_Lab[]" value=" " required></td><td><input type="text" class="form-control" name="Research_Pos[]" value=" "></td><td><input type="text" class="form-control" name="Research_Last_Name[]" value=" "></td><td><input type="text" class="form-control" name="Research_First_Name[]" value=" "></td><td><input type="text" class="form-control" name="Research_Hours[]" value=" "></td><td><select id="choice" class="form-control" name="Research_Volunteer[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" name="Research_Start[]" value=" "></td><td><input type="text" class="form-control" name="Research_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#researchTable tr:last").after('<tr id="researchRow' + $rowno + '"><td><input type="text" class="form-control" name="Research_Lab[]" value=" " required></td><td><input type="text" class="form-control" name="Research_Pos[]" value=" "></td><td><input type="text" class="form-control" name="Research_Last_Name[]" value=" "></td><td><input type="text" class="form-control" name="Research_First_Name[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]+|[\s])" title="Numbers only please." name="Research_Hours[]" value=" "></td><td><select id="choice" class="form-control" name="Research_Volunteer[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Research_Start[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Research_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".workAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#workTable tr").length;
       $rowno = $rowno + 1;
-      $("#workTable tr:last").after('<tr id="workRow' + $rowno + '"><td><input type="text" class="form-control" name="Work_Employer[]" value=" " required></td><td><input type="text" class="form-control" name="Work_Pos[]" value=" " required></td><td><input type="text" class="form-control" name="Work_Hours[]" value=" "></td><td><select id="choice" class="form-control" name="Work_Healthcare[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" name="Work_Start[]" value=" " required>   </td><td><input type="text" class="form-control" name="Work_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#workTable tr:last").after('<tr id="workRow' + $rowno + '"><td><input type="text" class="form-control" name="Work_Employer[]" value=" " required></td><td><input type="text" class="form-control" name="Work_Pos[]" value=" " required></td><td><input type="text" class="form-control" pattern="([0-9]+|[\s])" title="Numbers only please." name="Work_Hours[]" value=" "></td><td><select id="choice" class="form-control" name="Work_Healthcare[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Work_Start[]" value=" " required>   </td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Work_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".shadowAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#shadowTable tr").length;
       $rowno = $rowno + 1;
-      $("#shadowTable tr:last").after('<tr id="shadowRow' + $rowno + '"><td><input type="text" class="form-control" name="Shadow_Last_Name[]" value=" " required></td><td><input type="text" class="form-control" name="Shadow_First_Name[]" value=" " required></td><td><input type="text" class="form-control" name="Shadow_Specialty[]" value=" "></td><td><input type="text" class="form-control" name="Shadow_Hours[]" value=" ">   </td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#shadowTable tr:last").after('<tr id="shadowRow' + $rowno + '"><td><input type="text" class="form-control" name="Shadow_Last_Name[]" value=" " required></td><td><input type="text" class="form-control" name="Shadow_First_Name[]" value=" " required></td><td><input type="text" class="form-control" name="Shadow_Specialty[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]+|[\s])" title="Numbers only please." name="Shadow_Hours[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".volunteerAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#volunteerTable tr").length;
       $rowno = $rowno + 1;
-      $("#volunteerTable tr:last").after('<tr id="volunteerRow' + $rowno + '"><td><input type="text" class="form-control" name="Volunteer_Org[]" value=" " required></td><td><input type="text" class="form-control" name="Volunteer_Hours[]" value=" "></td><td><input type="text" class="form-control" name="Volunteer_Avg[]" value=" "></td><td><select id="choice" class="form-control" name="Volunteer_Healthcare[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" name="Volunteer_Start[]" value=" " required></td><td><input type="text" class="form-control" name="Volunteer_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#volunteerTable tr:last").after('<tr id="volunteerRow' + $rowno + '"><td><input type="text" class="form-control" name="Volunteer_Org[]" value=" " required></td><td><input type="text" class="form-control" pattern="([0-9]+|[\s])" title="Numbers only please." name="Volunteer_Hours[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]+|[\s])" title="Numbers only please." name="Volunteer_Avg[]" value=" "></td><td><select id="choice" class="form-control" name="Volunteer_Healthcare[]"><option value=" "></option><option value="Yes">Yes</option><option value="No">No</option></select></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Volunteer_Start[]" value=" " required></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Volunteer_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
    $(".abroadAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#abroadTable tr").length;
       $rowno = $rowno + 1;
-      $("#abroadTable tr:last").after('<tr id="abroadRow' + $rowno + '"><td><input type="text" class="form-control" name="Abroad_School[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_City[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_Country[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_Start[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#abroadTable tr:last").after('<tr id="abroadRow' + $rowno + '"><td><input type="text" class="form-control" name="Abroad_School[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_City[]" value=" "></td><td><input type="text" class="form-control" name="Abroad_Country[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Abroad_Start[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Abroad_End[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
     $(".eventAddRow").click(function() {
       event.preventDefault();
       $rowno = $("#eventTable tr").length;
       $rowno = $rowno + 1;
-      $("#eventTable tr:last").after('<tr id="eventRow' + $rowno + '"><td><input type="text" class="form-control" name="Event_Name[]" value=" "></td><td><input type="text" class="form-control" name="Event_Completed[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#eventTable tr:last").after('<tr id="eventRow' + $rowno + '"><td><input type="text" class="form-control" name="Event_Name[]" value=" "></td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Event_Completed[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
     $(".writerAddRow").click(function() {
@@ -165,7 +165,7 @@ $(document).ready(function(){
       $rowno = $("#writerTable tr").length;
       $rowno = $rowno + 1;
       $options = $("#writerOptions").html();
-      $("#writerTable tr:last").after('<tr id="writerRow' + $rowno + '"><td>' +$options+ '</td><td><input type="text" class="form-control" name="Letter_Date[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
+      $("#writerTable tr:last").after('<tr id="writerRow' + $rowno + '"><td>' +$options+ '</td><td><input type="text" class="form-control" pattern="([0-9]{4}[\-][0-9]{2}[\-][0-9]{2}|[\s])" title="Please supply in XXXX-XX-XX format." name="Letter_Date[]" value=" "></td><td class="text-right"><a href="#"><img class="iconBorder deleteRow" src="Images/open-iconic/png/minus-2x.png" alt="Delete Icon"></a></td></tr>');
    });
    
     $(".memberAddRow").click(function() {
@@ -187,6 +187,7 @@ $(document).ready(function(){
       $("#" + $rowid).remove();
    });
 
+
    $(".editIconInner").click(function(){
       event.preventDefault();
       $id = $("#innerID").html();
@@ -205,6 +206,21 @@ $(document).ready(function(){
       var form = '<form id="deleteForm" action="index.php" method="post"><input type="hidden" name="action" value="deleteRecord"><input type="hidden" name="ID" value="' +$id+'"><input type="hidden" name="groupSelect" value="' +$groupSelect+'"><input type="hidden" name="inner" value="true"></form>';
       $(".hiddenSubmitDiv").html(form);
       $(".modal-title").html($name + ' - ' + $id);
+      $("#deleteModal").modal('toggle');
+   });
+   
+   $(".deleteJoinIcon").click(function(){
+      event.preventDefault();
+      $studentid = $('#innerID').html();
+      $id = $(this).closest('tr').find('.recordSelect').html();
+      $first = $(this).closest('tr').find('.firstName').html();
+      $last = $(this).closest('tr').find('.lastName').html();
+      $groupSelect = $(this).closest('div').find('.groupSelect').html();
+
+      var form = '<form id="deleteForm" action="index.php" method="post"><input type="hidden" name="action" value="deleteRecordAssociation"><input type="hidden" name="ID" value="' +$id+'"><input type="hidden" name="groupSelect" value="' +$groupSelect+'"><input type="hidden" name="studentID" value="'+$studentid+'"></form>';
+      $(".hiddenSubmitDiv").html(form);
+      $(".modal-title").html($first + ' ' + $last + ' - ' + $id);
+       $(".modal-body").html("<p>Are you sure you want to remove this record from the student?<p>");
       $("#deleteModal").modal('toggle');
    });
    
