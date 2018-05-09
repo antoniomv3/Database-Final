@@ -1862,6 +1862,20 @@ class finalModel {
          case 'event':
             $input = $_POST['event'];
             $tableSource = '<h3 class="center">'.$input.' Attendance</h3>';
+            $sql = 'SELECT Count(*)
+                  FROM Student 
+                  WHERE StudentID NOT IN (
+                  SELECT S.StudentID
+                  FROM Student S, Event E
+                  WHERE E.StudentID = S.StudentID AND E.Event_Name = ?
+                  )
+                 
+                  ';
+            $query = $conn->prepare($sql);
+            $query->execute(array($input));
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
             $sql = 'SELECT StudentID, Last_Name, First_Name
                   FROM Student 
                   WHERE StudentID NOT IN (
@@ -1883,11 +1897,17 @@ class finalModel {
          case 'ethnic':
             $input = $_POST['ethnicity'];
             $tableSource = '<h3 class="center">'.$input.' Students</h3>';
-            $sql = 'SELECT StudentID, Last_Name, First_Name FROM Student WHERE Ethnic_Group = ?';
             
+            $sql = 'SELECT COUNT(*) FROM Student WHERE Ethnic_Group = ?';
             $query = $conn->prepare($sql);
             $query->execute(array($input));
-
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
+            $sql = 'SELECT StudentID, Last_Name, First_Name FROM Student WHERE Ethnic_Group = ? ORDER BY Last_Name ASC';
+            $query = $conn->prepare($sql);
+            $query->execute(array($input));
             while($row = $query->fetch(PDO::FETCH_ASSOC)) {
             $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
             <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
@@ -1915,7 +1935,8 @@ class finalModel {
             $query->execute();
             $row = $query->fetch(PDO::FETCH_ASSOC);
             $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
-            $sql = "SELECT StudentID, First_Name, Last_Name FROM Student WHERE Military_Service = 'Yes'";
+            
+            $sql = "SELECT StudentID, First_Name, Last_Name FROM Student WHERE Military_Service = 'Yes'  ORDER BY Last_Name Asc";
             $query = $conn->prepare($sql);
             $query->execute();
             while($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -1923,6 +1944,97 @@ class finalModel {
             <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
             }
             break;
+         case 'dues':
+            $tableSource = '<h3 class="center">Non Due Paying Students</h3>';
+            $sql = 'SELECT COUNT(*) FROM Student WHERE Date_Paid IS NULL';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
+            $sql = 'SELECT StudentID, First_Name, Last_Name FROM Student WHERE Date_Paid IS NULL ORDER BY Last_Name Asc';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         case 'writersDue':
+            $tableSource = '<h3 class="center">Missing Letters</h3>';
+            $sql = 'SELECT COUNT(*) FROM Letter_Join WHERE Reception_Date IS NULL';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
+            $sql = 'SELECT LW.WriterID, LW.First_Name, LW.Last_Name, COUNT(*)
+                     From Letter_Writer AS LW JOIN Letter_Join AS LJ ON LW.WriterID = LJ.WriterID
+                     WHERE LJ.Reception_Date IS NULL
+                     GROUP BY LW.WriterID
+                     ORDER BY LW.Last_Name Asc';
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+                  $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['writerid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td><td>'.$row['count'].'</td></tr>';
+               }
+            break;
+         case 'missingChoice':
+            $tableSource = '<h3 class="center">Students with Missing Choice</h3>';
+            $sql = "SELECT COUNT(*)
+                     FROM Student AS S
+                     JOIN Health_Profession_School AS HPS 
+                     ON S.studentID = HPS.studentID
+                     WHERE EXISTS 
+                     (SELECT HPS.studentID FROM Health_Profession_School AS HPS
+                     WHERE HPS.Accepted = 'Yes')
+                     AND HPS.studentID NOT IN (
+                     SELECT HPS.studentID FROM Health_Profession_School AS HPS
+                     WHERE HPS.Student_Choice = 'Yes' OR HPS.Student_Choice= 'No')";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
+            
+            $sql = "SELECT HPS.studentID, S.First_Name, S.Last_Name
+                     FROM Student AS S
+                     JOIN Health_Profession_School AS HPS 
+                     ON S.studentID = HPS.studentID
+                     WHERE EXISTS 
+                     (SELECT HPS.studentID FROM Health_Profession_School AS HPS
+                     WHERE HPS.Accepted = 'Yes')
+                     AND HPS.studentID NOT IN (
+                     SELECT HPS.studentID FROM Health_Profession_School AS HPS
+                     WHERE HPS.Student_Choice = 'Yes' OR HPS.Student_Choice= 'No')";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+         case 'firstgenAccepted':
+            $tableSource = '<h3 class="center">First Gen Accepted Students</h3>';
+            $sql = "SELECT COUNT(*)
+                     FROM Student AS S JOIN Health_Profession_School AS HPS ON S.studentID = HPS.studentID
+                     WHERE HPS.Accepted = 'Yes' AND S.First_Generation = 'Yes'";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $recordData = '<table class="table table-striped tableBorder"><tbody><tr><td>Total Count</td><td>'.$row['count'].'</td></tr></tbody></table>';
+            
+            $sql = "SELECT S.StudentID, S.Last_Name, S.First_Name
+                     FROM Student AS S JOIN Health_Profession_School AS HPS ON S.studentID = HPS.studentID
+                     WHERE HPS.Accepted = 'Yes' AND S.First_Generation = 'Yes'";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            while($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $tableData .= '<tr><td><a class="recordSelect" href="#">' .$row['studentid']. '</a></td><td class="lastName">' .$row['last_name']. '</td><td class="firstName">' .$row['first_name']. '</td>
+            <td class="text-right"><a href="#"><img class="iconBorder editIcon" src="Images/open-iconic/png/cog-2x.png" alt="Edit Icon"></a><a href="#"><img class="iconBorder deleteIcon" src="Images/open-iconic/png/trash-2x.png" alt="Delete Icon"></a></td></tr>';
+            }
+            break;
+            
          
 
       }

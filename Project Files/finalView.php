@@ -1589,7 +1589,7 @@ EOT;
 </form>';
    }}
    
-   var $queryContent = '
+   var $queryContent = '      
       <h4>Select students not present for a particular event</h4>
       <form action="index.php" method="post">
       <input type="hidden" name="action" value="queries">
@@ -1610,6 +1610,14 @@ EOT;
       </form>
       <br>
       
+      <h4>Letters that have not been received</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="writersDue">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
       <h4>How many are working? Average Hours?</h4>
       <form action="index.php" method="post">
       <input type="hidden" name="action" value="queries">
@@ -1625,9 +1633,57 @@ EOT;
       <button type="submit" class="btn btn-default">Go!</button>
       </form>
       <br>
+      
+      <h4>How many have haven\'t paid their dues?</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="dues">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
+      <h4>Students who have been accepted, but have not informed the office of their school choice</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="missingChoice">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
+      
+      <h4>First generation students accepted into a health profession school</h4>
+      <form action="index.php" method="post">
+      <input type="hidden" name="action" value="queries">
+      <input type="hidden" name="type" value="firstgenAccepted">
+      <button type="submit" class="btn btn-default">Go!</button>
+      </form>
+      <br>
    ';
    
    private function createQueryResult($tableData, $recordData, $tableSource){
+      if($tableSource == '<h3 class="center">Missing Letters</h3>') {
+         $this->queryContent = $tableSource;
+         $this->queryContent .= '
+         <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+               <a class="nav-link active" role="tab" data-toggle="tab" href="#results">Results</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link" role="tab" data-toggle="tab" href="#studentList">Writer List</a>
+            </li>
+         </ul>
+         <div class="tab-content">
+            <div id="results" class="tab-pane fade show active" role="tabpanel">';
+      $this->queryContent .= $recordData; 
+      $this->queryContent .= '</div>
+            <div id="studentList" class="tab-pane fade" role="tabpanel">';
+                  $this->queryContent .= '<h2 class="center groupSelect">Student List</h2>';
+                  $this->queryContent .= $this->viewStarter;
+                  $this->queryContent .= '<th>Total Missing</th></tr></thead><tbody>';
+                  $this->queryContent .= $tableData;
+                  $this->queryContent .= '</tbody></table><div class="hiddenSubmitDiv"></div>
+            </div>
+         </div>';
+      } else {
       $this->queryContent = $tableSource;
       $this->queryContent .= '
          <ul class="nav nav-tabs" role="tablist">
@@ -1651,6 +1707,7 @@ EOT;
                   $this->queryContent .= '</tbody></table><div class="hiddenSubmitDiv"></div>
             </div>
          </div>';
+      }
    }
    
 }
